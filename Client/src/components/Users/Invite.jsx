@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthProvider"
 import Sidebar from "./UserLayout/sidebar"
 import Smallfooter from "./UserLayout/smallfooter"
 
-const Invite = ({ embedded = false }) => {
+const Invite = ({ embedded = false , numOfReferral}) => {
   const { user } = useAuth()
   const [stats, setStats] = useState({
     totalInvites: 0,
@@ -257,18 +257,18 @@ const Invite = ({ embedded = false }) => {
                             <i className="bi bi-person-plus me-1"></i>
                             Total Invites
                           </span>
-                          <span className="badge bg-primary">{stats.totalInvites}</span>
+                          <span className="badge bg-primary">{stats.totalInvites || numOfReferral}</span>
                         </div>
                         <div className="progress mb-2" style={{ height: '20px' }}>
                           <div 
                             className="progress-bar bg-primary" 
                             role="progressbar" 
-                            style={{ width: `${Math.min((stats.totalInvites / Math.max(stats.totalInvites, 10)) * 100, 100)}%` }}
+                            style={{ width: `${Math.min((stats.totalInvites|| numOfReferral / Math.max(stats.totalInvites || numOfReferral, 10)) * 100, 100)}%` }}
                             aria-valuenow={stats.totalInvites}
                             aria-valuemin="0" 
                             aria-valuemax="100"
                           >
-                            <span className="visually-hidden">{stats.totalInvites} invites</span>
+                            <span className="visually-hidden">{stats.totalInvites || numOfReferral} invites</span>
                           </div>
                         </div>
                         <small className="text-muted">Users you've invited</small>
@@ -283,7 +283,7 @@ const Invite = ({ embedded = false }) => {
                     <div className="col-12">
                       <div className="bg-light rounded p-3">
                         <div className="text-center">
-                          <div className="text-primary fw-bold display-6">{stats.totalInvites}</div>
+                          <div className="text-primary fw-bold display-6">{stats.totalInvites || numOfReferral}</div>
                           <p className="text-muted mb-0">Total Users Invited</p>
                           <small className="text-muted">Keep sharing your referral link to invite more users!</small>
                         </div>

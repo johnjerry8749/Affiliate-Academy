@@ -17,4 +17,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey , {
     detectSessionInUrl: true,  // handles OAuth redirects if you use them later
     storageKey: 'sb-affiliate-auth' //
   },
+  global: {
+    headers: {
+      'Accept': 'application/json',
+    },
+  },
 });

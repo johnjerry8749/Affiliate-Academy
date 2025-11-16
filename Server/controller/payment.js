@@ -75,7 +75,7 @@ export const verifyPaystack = async (req, res) => {
     // HANDLE REFERRAL COMMISSION DISTRIBUTION
     if (referrerId && newUserId) {
       console.log('Processing referral commission for referrer:', referrerId);
-      
+
       // Verify referrer exists
       const { data: referrerExists, error: referrerCheckError } = await supabase
         .from('users')
@@ -87,7 +87,7 @@ export const verifyPaystack = async (req, res) => {
         console.error('Referrer not found:', referrerId);
       } else {
         console.log('Referrer found:', referrerExists.full_name);
-        
+
         // Split: 50% company, 50% referrer
         const companyShare = totalAmount * 0.5;
         const referrerTotal = totalAmount * 0.5;
@@ -115,7 +115,8 @@ export const verifyPaystack = async (req, res) => {
           const newAvailableBalance = (balanceData.available_balance || 0) + balanceAmount;
           const newTotalEarned = (balanceData.total_earned || 0) + referrerTotal;
 
-          const { error: updateError } = await supabase
+          // Update with count
+          const { error: updateError, count } = await supabase
             .from('user_balances')
             .update({
               available_balance: newAvailableBalance,
@@ -126,8 +127,31 @@ export const verifyPaystack = async (req, res) => {
 
           if (updateError) {
             console.error('Error updating referrer balance:', updateError);
+          } else if (count === 0) {
+            // No row was updated → balance doesn't exist
+            console.warn(`No balance found for referrer ${referrerId}. Creating default balance...`);
+
+            // Create default balance
+            const { error: insertError } = await supabase
+              .from('user_balances')
+              .insert({
+                user_id: referrerId,
+                available_balance: balanceAmount,
+                pending_balance: 0,
+                total_earned: referrerTotal,
+                total_withdrawn: 0,
+                currency: balanceData.currency || 'NGN (₦)', // fallback
+                updated_at: new Date().toISOString(),
+              });
+
+            if (insertError) {
+              console.error('Failed to create balance for referrer:', insertError);
+            } else {
+              console.log(`Default balance created for referrer ${referrerId}: +${balanceAmount} available`);
+            }
           } else {
-            console.log(`✅ Referrer balance updated: +${balanceAmount} available, +${referrerTotal} total earned`);
+            // Success: row was updated
+            console.log(`Referrer balance updated: +${balanceAmount} available, +${referrerTotal} total earned (count: ${count})`);
           }
         }
 
