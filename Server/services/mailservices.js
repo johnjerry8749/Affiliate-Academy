@@ -7,10 +7,6 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const templatePath = path.join(__dirname, '../template/adminMail.html');
-let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
-
-console.log('Template path:', templatePath);
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -25,7 +21,7 @@ const replaceTemplateVariables = (template, subject, message, name) => {
     return template
         .replace(/{{subject}}/g, subject)
         .replace(/{{message}}/g, message)
-        .replace(/{{name}}/g, name || "User");
+        .replace(/{{name}}/g, name || "Valued Member");
 };
 
 export const sendMail = async (req, res) => {
@@ -36,14 +32,18 @@ export const sendMail = async (req, res) => {
     }
 
     try {
+        // Read template fresh each time to get latest version
+        const templatePath = path.join(__dirname, '../template/adminMail.html');
+        const htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+        
         // Replace template variables
         const emailHtml = replaceTemplateVariables(htmlTemplate, subject, message, name);
 
         await transporter.sendMail({
-            from: `"Affiliate Academy" <${process.env.GMAIL_USER}>`, // Fixed to use GMAIL_USER
+            from: `"Affiliate Academy" <${process.env.GMAIL_USER}>`,
             to,
             subject,
-            html: emailHtml, // Use the template instead of hardcoded HTML
+            html: emailHtml,
         });
 
         console.log(`📧 Email sent successfully to: ${to}`);
@@ -57,7 +57,29 @@ export const sendMail = async (req, res) => {
         res.json({ success: true, message: 'Email sent successfully' });
     } catch (error) {
         console.error('❌ Email sending error:', error);
-        res.status(500).json({ error: 'Failed to send email' });
+        res.status(500).json({ error: 'Failed to send email', details: error.message });
     }
 };
 
+// Standalone function to send emails programmatically (without req/res)
+export const sendEmailDirect = async ({ to, subject, message, name }) => {
+    try {
+        const templatePath = path.join(__dirname, '../template/adminMail.html');
+        const htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+        
+        const emailHtml = replaceTemplateVariables(htmlTemplate, subject, message, name);
+
+        const info = await transporter.sendMail({
+            from: `"Affiliate Academy" <${process.env.GMAIL_USER}>`,
+            to,
+            subject,
+            html: emailHtml,
+        });
+
+        console.log('✅ Direct email sent successfully:', info.messageId);
+        return { success: true, messageId: info.messageId };
+    } catch (error) {
+        console.error('❌ Error sending direct email:', error);
+        throw error;
+    }
+};

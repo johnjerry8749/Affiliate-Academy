@@ -402,6 +402,8 @@ const SystemConfig = () => {
   const [settings, setSettings] = useState({
     default_referral_commission: '',
     referral_commission_type: 'percentage',
+    registration_fee_amount: '',
+    registration_fee_currency: 'NGN',
     paystack_public_key: '',
     paystack_secret_key: '',
     wallet_address: '',
@@ -479,6 +481,8 @@ const SystemConfig = () => {
         setSettings({
           default_referral_commission: data.default_referral_commission?.toString() || '',
           referral_commission_type: data.referral_commission_type || 'percentage',
+          registration_fee_amount: data.registration_fee_amount?.toString() || '5000',
+          registration_fee_currency: data.registration_fee_currency || 'NGN',
           paystack_public_key: data.paystack_public_key || '',
           paystack_secret_key: data.paystack_secret_key || '',
           wallet_address: data.wallet_address || '',
@@ -528,6 +532,8 @@ const SystemConfig = () => {
       const payload = {
         default_referral_commission: parseFloat(settings.default_referral_commission) || 0,
         referral_commission_type: settings.referral_commission_type,
+        registration_fee_amount: parseFloat(settings.registration_fee_amount) || 5000,
+        registration_fee_currency: settings.registration_fee_currency,
         paystack_public_key: settings.paystack_public_key.trim(),
         paystack_secret_key: settings.paystack_secret_key.trim(),
         wallet_address: settings.wallet_address.trim(),
@@ -625,6 +631,46 @@ const SystemConfig = () => {
                       <small className="text-muted">
                         Commission earned when a user registers through a referral link
                       </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ---------- Registration Fee Section ---------- */}
+              <div className="card shadow-sm mb-4" style={{ backgroundColor: 'white' }}>
+                <div className="card-body">
+                  <h5 className="fw-bold text-dark mb-3">
+                    <i className="bi bi-cash-coin me-2 text-primary"></i>
+                    Registration Fee Settings
+                  </h5>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-bold text-dark">Registration Amount</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="registration_fee_amount"
+                        value={settings.registration_fee_amount}
+                        onChange={handleInputChange}
+                        placeholder="5000"
+                        min="100"
+                        max="1000000"
+                      />
+                      <small className="text-muted">Amount users pay to register (100 - 1,000,000)</small>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-bold text-dark">Currency</label>
+                      <select
+                        className="form-select"
+                        name="registration_fee_currency"
+                        value={settings.registration_fee_currency}
+                        onChange={handleInputChange}
+                      >
+                        <option value="NGN">NGN (₦)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                      </select>
                     </div>
                   </div>
                 </div>

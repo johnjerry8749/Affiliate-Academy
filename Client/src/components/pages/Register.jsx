@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider.jsx';
 import { countries } from './userCountries.js';
 import PaystackPayment from '../../payment/PaystackPayment.jsx';
+import { getRegistrationFee } from '../../api/adminApi.js';
 import './Register.css';
 
 const Register = () => {
@@ -31,7 +32,8 @@ const Register = () => {
 
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
   const [paymentRef, setPaymentRef] = useState('');
-  const [paymentAmount] = useState(5000);
+  const [paymentAmount, setPaymentAmount] = useState(5000);
+  const [loadingFee, setLoadingFee] = useState(true);
   const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
   useEffect(() => {
@@ -39,6 +41,24 @@ const Register = () => {
     const refParam = searchParams.get('ref');
     if (refParam) setReferralCode(refParam);
   }, [location.search]);
+
+  // Fetch registration fee from API
+  useEffect(() => {
+    const fetchFee = async () => {
+      try {
+        const response = await getRegistrationFee();
+        if (response.success) {
+          setPaymentAmount(response.amount);
+        }
+      } catch (error) {
+        console.error('Failed to fetch registration fee:', error);
+        // Keep default of 5000 if fetch fails
+      } finally {
+        setLoadingFee(false);
+      }
+    };
+    fetchFee();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

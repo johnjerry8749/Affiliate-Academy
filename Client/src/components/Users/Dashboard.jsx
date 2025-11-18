@@ -258,6 +258,19 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Video Banner - Mobile Only */}
+          <div className="card mb-3 d-lg-none">
+            <video
+              src={affiliateVideo}
+              className="card-img-top"
+              style={{ width: '100%', height: '250px', objectFit: 'cover', borderRadius: '12px', display: 'block' }}
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          </div>
+
           {/* Stats Cards Row */}
           <div className="container-fluid px-0 ">
             <div className="row g-3 mb-4">
@@ -360,19 +373,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Video Banner - Mobile Only */}
-          <div className="card mb-3 d-lg-none">
-            <video
-              src={affiliateVideo}
-              className="card-img-top"
-              style={{ width: '100%', height: '250px', objectFit: 'cover', borderRadius: '12px', display: 'block' }}
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
           </div>
 
           {/* Invite Section - Full Width */}

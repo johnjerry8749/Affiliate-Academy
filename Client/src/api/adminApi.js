@@ -155,3 +155,29 @@ export const deleteCourse = async (courseId, token) => {
     throw new Error(error.response?.data?.message || 'Failed to delete course');
   }
 };
+
+// Registration Fee APIs
+export const getRegistrationFee = async () => {
+  try {
+    const res = await axiosInstance.get('/api/setting/registration-fee');
+    return res.data;
+  } catch (error) {
+    // Return default if API fails
+    return { success: true, amount: 5000, currency: 'NGN' };
+  }
+};
+
+export const updateRegistrationFee = async (token, amount, currency) => {
+  try {
+    const res = await axiosInstance.put(
+      '/api/setting/registration-fee',
+      { amount, currency },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    return res.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || 'Failed to update registration fee');
+  }
+};

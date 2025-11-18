@@ -142,7 +142,7 @@ export const getDashboardData = async (req, res) => {
 
     const inactiveUsers = (totalUsers || 0) - (activeUsers || 0);
 
-    // Registration deposits
+    // Registration deposits (already in Naira)
     const { data: transactionsData, error: transactionsError } = await supabase
       .from('transactions')
       .select('amount')
@@ -151,7 +151,7 @@ export const getDashboardData = async (req, res) => {
     if (transactionsError) throw transactionsError;
 
     const totalRegistrationDeposits = transactionsData?.reduce(
-      (sum, record) => sum + (parseFloat(record.amount) || 0),
+      (sum, record) => sum + (parseFloat(record.amount) || 0), // No need to divide, already in Naira
       0
     ) || 0;
 
