@@ -3,7 +3,7 @@ import axiosInstance from '../utils/axiosInstance';
 export const adminLogin = async (email, password) => {
   try {
     const res = await axiosInstance.post('/api/adminlogin/login', { email, password });
-    console.log('adminLogin response:', res.data);      
+    console.log('adminLogin response:', res.data);
     return res.data; // { message, token, admin }
   } catch (err) {
     const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
@@ -21,6 +21,36 @@ export const fetchAdminProfile = async (token) => {
     throw new Error(err.response?.data?.message || 'Failed to fetch admin profile');
   }
 };
+
+export const getSystemSettings = async (token) => {
+  try {
+    const res = await axiosInstance.get('/api/setting/getSettings', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    console.log(res.data)
+    // console.log(token)
+    return res.data;
+  } catch (error) {
+    throw new Error(err.response?.data?.message || 'Failed to fetch system settings ');
+  }
+}
+
+export const saveSystemSettings = async (token, payload) => {
+  try {
+    const response = await axiosInstance.post(
+      '/api/setting/saveSettings',
+      payload, // <-- this is the actual body
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    console.log(payload)
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || 'Failed to update system settings');
+  }
+};
+
 
 export const fetchUsersList = async (token, page = 1, limit = 10, search = '') => {
   if (!token) throw new Error('Missing authentication token');
@@ -123,5 +153,31 @@ export const deleteCourse = async (courseId, token) => {
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to delete course');
+  }
+};
+
+// Registration Fee APIs
+export const getRegistrationFee = async () => {
+  try {
+    const res = await axiosInstance.get('/api/setting/registration-fee');
+    return res.data;
+  } catch (error) {
+    // Return default if API fails
+    return { success: true, amount: 5000, currency: 'NGN' };
+  }
+};
+
+export const updateRegistrationFee = async (token, amount, currency) => {
+  try {
+    const res = await axiosInstance.put(
+      '/api/setting/registration-fee',
+      { amount, currency },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    return res.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || 'Failed to update registration fee');
   }
 };

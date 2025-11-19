@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../supabase';
 import { useAuth } from '../../context/AuthProvider';
+import { v4 as uuidv4 } from "uuid";
+
 
 const Cryptopayment = () => {
   const { user } = useAuth();
@@ -10,6 +12,7 @@ const Cryptopayment = () => {
   const [submitting, setSubmitting] = useState(false);
   const [walletName, setWalletName] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
+  const [walletAmount, setWalletAmount] = useState(0)
   const [copied, setCopied] = useState(false);
   const [paymentProof, setPaymentProof] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -42,14 +45,14 @@ const Cryptopayment = () => {
         setLoading(true);
         const { data, error } = await supabase
           .from('system_settings')
-          .select('wallet_name, wallet_address')
-          .single();
-
+          .select('wallet_name, wallet_address, wallet_amount ')
+          .single()
         if (error && error.code !== 'PGRST116') throw error;
 
         if (data) {
           setWalletName(data.wallet_name || 'Crypto Wallet');
           setWalletAddress(data.wallet_address || '');
+          setWalletAmount(data.wallet_amount || 0);
         } else {
           // No settings found - show message
           showLiveAlert('Wallet information not configured yet. Please contact admin.', 'warning');
@@ -90,7 +93,7 @@ const Cryptopayment = () => {
       }
 
       setPaymentProof(file);
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -106,67 +109,60 @@ const Cryptopayment = () => {
     setPreviewUrl('');
   };
 
-  // Submit payment proof
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!paymentProof) {
-      showLiveAlert('Please upload payment proof', 'warning');
+      showLiveAlert('Upload proof', 'warning');
       return;
     }
 
     try {
       setSubmitting(true);
 
-      // Upload payment proof to Supabase Storage
+      // 1. Upload to crypto_payment bucket
       const fileExt = paymentProof.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-      const filePath = `payment-proofs/${fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `pending/${Date.now()}-${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('payment-proofs')
-        .upload(filePath, paymentProof);
+        .from('crypto_payment') // ← YOUR BUCKET
+        .upload(filePath, paymentProof, { upsert: false });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // 2. Get public URL
       const { data: urlData } = supabase.storage
-        .from('payment-proofs')
+        .from('crypto_payment')
         .getPublicUrl(filePath);
 
-      // Save payment record to database
+      // 3. Save to crypto_payments
       const { error: insertError } = await supabase
         .from('crypto_payments')
-        .insert([
-          {
-            user_id: user.id,
-            wallet_name: walletName,
-            wallet_address: walletAddress,
-            payment_proof_url: urlData.publicUrl,
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]);
+        .insert({
+          user_id: uuidv4(),
+          wallet_name: walletName,
+          wallet_address: walletAddress,
+          payment_proof_url: urlData.publicUrl,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        });
 
       if (insertError) throw insertError;
 
-      showLiveAlert('Payment proof submitted successfully! We will verify and update your account shortly.', 'success');
-      
-      // Delay navigation to show the success message
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
-    } catch (error) {
-      console.error('Error submitting payment:', error);
-      showLiveAlert('Failed to submit payment proof. Please try again.', 'danger');
+      showLiveAlert('Proof submitted! We’ll verify in 24h.', 'success');
+      setTimeout(() => navigate('/dashboard'), 2000);
+    } catch (err) {
+      console.error('Submit error:', err);
+      showLiveAlert('Failed. Try again.', 'danger');
     } finally {
       setSubmitting(false);
     }
   };
-
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center" 
+      <div className="min-vh-100 d-flex align-items-center justify-content-center"
         style={{ background: 'linear-gradient(135deg, #198754 0%, #20c997 100%)' }}>
         <div className="text-center text-white">
           <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem' }}>
@@ -179,12 +175,12 @@ const Cryptopayment = () => {
   }
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center py-4 px-3" 
-      style={{ 
+    <div className="min-vh-100 d-flex align-items-center justify-content-center py-4 px-3"
+      style={{
         background: 'linear-gradient(135deg, #198754 0%, #20c997 100%)',
         position: 'relative'
       }}>
-      
+
       {/* Background Pattern */}
       <div style={{
         content: '',
@@ -198,8 +194,8 @@ const Cryptopayment = () => {
       }}></div>
 
       {/* Live Alert Placeholder */}
-      <div 
-        id="liveAlertPlaceholder" 
+      <div
+        id="liveAlertPlaceholder"
         style={{
           position: 'fixed',
           top: '20px',
@@ -211,7 +207,7 @@ const Cryptopayment = () => {
 
       <div className="container" style={{ maxWidth: '700px', position: 'relative', zIndex: 1 }}>
         {/* Back Button */}
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="btn btn-link text-white text-decoration-none mb-3 p-0 d-inline-flex align-items-center"
           style={{ fontSize: '0.95rem', fontWeight: 500, gap: '8px' }}
@@ -243,11 +239,20 @@ const Cryptopayment = () => {
 
             {/* Wallet Information */}
             <div className="bg-light rounded-3 p-4 mb-4">
+              {/* Wallet Name */}
               <div className="d-inline-block bg-success text-white px-3 py-2 rounded-pill mb-3">
                 <i className="bi bi-wallet2 me-2"></i>
                 <strong>{walletName}</strong>
               </div>
 
+              {/* Wallet Amount */}
+              <div className="mb-3 d-flex justify-content-center ">
+                <span className="badge bg-success fs-6" >
+                  Amount: {parseFloat(walletAmount || 0).toFixed(2)} 
+                </span>
+              </div>
+
+              {/* Wallet Address */}
               <div className="mb-3">
                 <label className="form-label fw-bold">Wallet Address</label>
                 <div className="input-group">
@@ -273,6 +278,7 @@ const Cryptopayment = () => {
               </div>
             </div>
 
+
             {/* Payment Form */}
             <form onSubmit={handleSubmit}>
               <h5 className="fw-bold mb-3 pb-2 border-bottom">
@@ -285,9 +291,9 @@ const Cryptopayment = () => {
                 <label className="form-label fw-bold">
                   Payment Proof (Screenshot) <span className="text-danger">*</span>
                 </label>
-                
+
                 {!paymentProof ? (
-                  <div 
+                  <div
                     className="border border-2 border-dashed rounded-3 p-5 text-center bg-light"
                     style={{ cursor: 'pointer', borderColor: '#dee2e6' }}
                     onClick={() => document.getElementById('paymentProof').click()}
@@ -305,7 +311,12 @@ const Cryptopayment = () => {
                   </div>
                 ) : (
                   <div className="position-relative border rounded-3 overflow-hidden">
-                    <img src={previewUrl} alt="Payment Proof" className="w-100" style={{ maxHeight: '400px', objectFit: 'contain', background: '#f5f5f5' }} />
+                    {/* <img src={previewUrl} alt="Payment Proof" className="w-100"  /> */}
+                    {previewUrl && (
+                      <img src={previewUrl} alt="Payment Proof" className="w-100"
+                        style={{ maxHeight: '400px', objectFit: 'contain', background: '#f5f5f5' }} />
+                    )}
+
                     <button
                       type="button"
                       className="btn btn-danger position-absolute top-0 end-0 m-2"
@@ -337,7 +348,7 @@ const Cryptopayment = () => {
                   type="submit"
                   className="btn btn-success btn-lg"
                   disabled={submitting || !paymentProof}
-                  style={{ 
+                  style={{
                     background: 'linear-gradient(135deg, #198754 0%, #20c997 100%)',
                     border: 'none',
                     fontWeight: 600
@@ -362,4 +373,4 @@ const Cryptopayment = () => {
       </div>
     </div>
   );
-};export default Cryptopayment;
+}; export default Cryptopayment;
