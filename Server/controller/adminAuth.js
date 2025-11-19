@@ -155,13 +155,15 @@ export const getDashboardData = async (req, res) => {
       0
     ) || 0;
 
+    console.log(totalRegistrationDeposits)
+
     // Available balances
     const { data: balanceData, error: balanceError } = await supabase
       .from('user_balances')
       .select('available_balance');
 
     if (balanceError) throw balanceError;
-
+    console.log(balanceData)
     const totalBalance = balanceData?.reduce(
       (sum, record) => sum + (parseFloat(record.available_balance) || 0),
       0
