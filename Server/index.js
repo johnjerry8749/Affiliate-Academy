@@ -3,6 +3,7 @@ import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fileUpload from 'express-fileupload';
 import './services/mailservices.js';
 // import './seedAdmin.js'
 
@@ -15,16 +16,23 @@ import mailRoutes from './routes/mail.js';
 import adminLoginRouter from './routes/adminAuth.js';
 import Adminrouter from './routes/adminRoutes.js';
 import systemConfig from './routes/systemSettingsRoutes.js';
+import withdrawalRoutes from './routes/withdrawal.js';
+import estateRoutes from './routes/estate.js';
 
 // Simple CORS setup
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
+  origin: ['http://localhost:5174', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
   credentials: true
 }));
 
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload({
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
+  abortOnLimit: true,
+  createParentPath: true
+}));
 
 // Routes
 app.use('/api', paymentVerificationRoutes);
@@ -32,6 +40,8 @@ app.use('/api', mailRoutes);
 app.use('/api/adminlogin', adminLoginRouter);
 app.use('/api/admin', Adminrouter);
 app.use('/api/setting', systemConfig);
+app.use('/api/withdrawal', withdrawalRoutes);
+app.use('/api/estate', estateRoutes);
 
 const PORT = process.env.PORT || 5000;
 

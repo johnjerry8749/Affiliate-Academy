@@ -1,5 +1,6 @@
 
 import fetch from 'node-fetch';
+import crypto from 'crypto';
 import { supabase } from '../utils/supabaseClient.js';
 import { sendEmailDirect } from '../services/mailservices.js';
 
@@ -16,24 +17,32 @@ export const verifyPaystack = async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
+  const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+    headers: {
+      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const result = await response.json();
+  console.log('Paystack response:', result);
+  console.log('Response status:', response.status);
+  console.log('Result.status:', result.status);
+  console.log('Result.data?.status:', result.data?.status);
+
+  if (!response.ok || !result.status || result.data?.status !== 'success') {
+    console.error(' Payment verification failed:', {
+      responseOk: response.ok,
+      resultStatus: result.status,
+      dataStatus: result.data?.status,
+      gatewayResponse: result.data?.gateway_response,
+      message: result.message
     });
-
-    const result = await response.json();
-    console.log('Paystack response:', result);
-
-    if (!response.ok || !result.status || result.data.status !== 'success') {
-      return res.status(400).json({
-        success: false,
-        message: result.data?.gateway_response || 'Payment failed',
-      });
-    }
-
-    const { data } = result;
+    return res.status(400).json({
+      success: false,
+      message: result.data?.gateway_response || result.message || 'Payment failed',
+    });
+  }    const { data } = result;
     const totalAmount = data.amount / 100; // Convert from kobo to naira
 
     // Get referrer ID and user ID from request body (POST) or metadata (GET)
@@ -89,7 +98,7 @@ export const verifyPaystack = async (req, res) => {
           We're excited to have you on board and look forward to helping you succeed in your affiliate marketing journey. You can now log in to your dashboard and start exploring our programs.`,
           name: newUserData.full_name
         });
-        console.log('✅ Welcome email sent to:', newUserData.email);
+        console.log(' Welcome email sent to:', newUserData.email);
       }
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
@@ -128,54 +137,83 @@ export const verifyPaystack = async (req, res) => {
           balanceAmount
         });
 
-        // Update referrer's user_balances
+        // 1. UPDATE COMPANY WALLET - Store company's 50% share
+        try {
+          const { data: companyWallet, error: walletFetchError } = await supabase
+            .from('company_wallet')
+            .select('total_earnings, id')
+            .maybeSingle();
+
+          if (walletFetchError) {
+            console.error('Error fetching company wallet:', walletFetchError);
+          } else {
+            const currentEarnings = companyWallet?.total_earnings || 0;
+            const newTotalEarnings = currentEarnings + companyShare;
+            const walletId = companyWallet?.id || '00000000-0000-0000-0000-000000000001';
+
+            const { error: walletUpdateError } = await supabase
+              .from('company_wallet')
+              .upsert({
+                id: walletId,
+                total_earnings: newTotalEarnings
+              });
+
+            if (walletUpdateError) {
+              console.error('Error updating company wallet:', walletUpdateError);
+            } else {
+              console.log(` Company wallet updated: +₦${companyShare} (Total: ₦${newTotalEarnings})`);
+            }
+          }
+        } catch (companyWalletError) {
+          console.error('Company wallet update failed:', companyWalletError);
+        }
+
+        // 2. UPDATE REFERRER'S USER_BALANCES
         const { data: balanceData, error: balanceError } = await supabase
           .from('user_balances')
           .select('available_balance, total_earned')
           .eq('user_id', referrerId)
           .single();
 
-        if (!balanceError && balanceData) {
-          const newAvailableBalance = (balanceData.available_balance || 0) + balanceAmount;
+        if (balanceError && balanceError.code !== 'PGRST116') {
+          console.error('Error fetching referrer balance:', balanceError);
+        }
+
+        if (balanceData) {
+          // User balance exists - UPDATE IT
+          const newAvailableBalance = (balanceData.available_balance || 0) + referrerTotal;
           const newTotalEarned = (balanceData.total_earned || 0) + referrerTotal;
 
-          // Update with count
-          const { error: updateError, count } = await supabase
+          const { error: updateError } = await supabase
             .from('user_balances')
             .update({
               available_balance: newAvailableBalance,
-              total_earned: newTotalEarned,
-              updated_at: new Date().toISOString(),
+              total_earned: newTotalEarned
             })
             .eq('user_id', referrerId);
 
           if (updateError) {
-            console.error('Error updating referrer balance:', updateError);
-          } else if (count === 0) {
-            // No row was updated → balance doesn't exist
-            console.warn(`No balance found for referrer ${referrerId}. Creating default balance...`);
-
-            // Create default balance
-            const { error: insertError } = await supabase
-              .from('user_balances')
-              .insert({
-                user_id: referrerId,
-                available_balance: balanceAmount,
-                pending_balance: 0,
-                total_earned: referrerTotal,
-                total_withdrawn: 0,
-                currency: balanceData.currency || 'NGN (₦)', // fallback
-                updated_at: new Date().toISOString(),
-              });
-
-            if (insertError) {
-              console.error('Failed to create balance for referrer:', insertError);
-            } else {
-              console.log(`Default balance created for referrer ${referrerId}: +${balanceAmount} available`);
-            }
+            console.error('❌ Error updating referrer balance:', updateError);
           } else {
-            // Success: row was updated
-            console.log(`Referrer balance updated: +${balanceAmount} available, +${referrerTotal} total earned (count: ${count})`);
+            console.log(`✅ Referrer balance updated: +₦${referrerTotal} (Total: ₦${newAvailableBalance})`);
+          }
+        } else {
+          // User balance doesn't exist - CREATE IT
+          const { error: insertError } = await supabase
+            .from('user_balances')
+            .insert({
+              id: crypto.randomUUID(),
+              user_id: referrerId,
+              available_balance: referrerTotal,
+              pending_balance: 0,
+              total_earned: referrerTotal,
+              total_withdrawn: 0
+            });
+
+          if (insertError) {
+            console.error('❌ Failed to create balance for referrer:', insertError);
+          } else {
+            console.log(`✅ Balance created for referrer: ₦${referrerTotal}`);
           }
         }
 
@@ -237,6 +275,37 @@ export const verifyPaystack = async (req, res) => {
       }
     } else {
       console.log('No referrer - Company gets 100%:', totalAmount);
+      
+      // UPDATE COMPANY WALLET - Store 100% when no referral
+      try {
+        const { data: companyWallet, error: walletFetchError } = await supabase
+          .from('company_wallet')
+          .select('total_earnings, id')
+          .maybeSingle();
+
+        if (walletFetchError) {
+          console.error('Error fetching company wallet:', walletFetchError);
+        } else {
+          const currentEarnings = companyWallet?.total_earnings || 0;
+          const newTotalEarnings = currentEarnings + totalAmount;
+          const walletId = companyWallet?.id || '00000000-0000-0000-0000-000000000001';
+
+          const { error: walletUpdateError } = await supabase
+            .from('company_wallet')
+            .upsert({
+              id: walletId,
+              total_earnings: newTotalEarnings
+            });
+
+          if (walletUpdateError) {
+            console.error('❌ Error updating company wallet (100%):', walletUpdateError);
+          } else {
+            console.log(`✅ Company wallet updated: +₦${totalAmount} (Total: ₦${newTotalEarnings})`);
+          }
+        }
+      } catch (companyWalletError) {
+        console.error('Company wallet update failed (100%):', companyWalletError);
+      }
     }
 
     return res.status(200).json({

@@ -181,3 +181,4 @@ export const updateRegistrationFee = async (token, amount, currency) => {
     throw new Error(error.response?.data?.error || 'Failed to update registration fee');
   }
 };
+

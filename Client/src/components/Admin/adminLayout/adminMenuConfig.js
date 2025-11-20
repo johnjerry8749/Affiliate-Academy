@@ -36,6 +36,12 @@ export const ADMIN_MENU_ITEMS = [
       description: 'Real Estate Management',
     },
     {
+      title: 'Crypto Payment Proofs',
+      icon: 'fas fa-file-invoice-dollar',
+      path: '/admin/userspaymentcrypto',
+      description: 'Manage Crypto Payment Proofs',
+    },
+    {
       title: 'Site Settings',
       icon: 'fas fa-cogs',
       path: '/admin/settings',
@@ -44,6 +50,7 @@ export const ADMIN_MENU_ITEMS = [
         { title: 'General Settings', path: '/admin/settings/general' },
       ]
     },
+    
 ];
 
 // Profile Menu Items

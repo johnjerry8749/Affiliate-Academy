@@ -96,6 +96,8 @@ const AddEstate = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('Fetched estates:', data); // Debug log
       setEstates(data || []);
     } catch (error) {
       console.error('Error fetching estates:', error);
@@ -150,21 +152,23 @@ const AddEstate = () => {
     try {
       setUploading(true);
 
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `estates/${fileName}`;
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('image', imageFile);
 
-      const { error: uploadError } = await supabase.storage
-        .from('estate-images')
-        .upload(filePath, imageFile);
+      // Upload via backend API (bypasses RLS)
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/estate/upload-image`, {
+        method: 'POST',
+        body: formData
+      });
 
-      if (uploadError) throw uploadError;
+      const result = await response.json();
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('estate-images')
-        .getPublicUrl(filePath);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to upload image');
+      }
 
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      setFormData(prev => ({ ...prev, image_url: result.imageUrl }));
       setImageFile(null);
       showLiveAlert('Image uploaded successfully!', 'success');
     } catch (error) {
@@ -190,27 +194,40 @@ const AddEstate = () => {
         title: formData.title,
         description: formData.description,
         location: formData.location,
-        price: parseFloat(formData.price),
+        price: formData.price,
         currency: formData.currency,
         listing_type: formData.listing_type,
-        bedrooms: parseInt(formData.bedrooms) || 0,
-        bathrooms: parseInt(formData.bathrooms) || 0,
-        area: parseFloat(formData.area) || 0,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        area: formData.area,
         property_type: formData.property_type,
         status: formData.status,
         image_url: formData.image_url
       };
 
-      const { error } = await supabase
-        .from('real_estates')
-        .insert([estateData]);
+      // Use backend API instead of direct Supabase call
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/estate/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(estateData)
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to add estate');
+      }
 
       showLiveAlert('Real estate added successfully!', 'success');
       resetForm();
       setShowAddForm(false);
-      fetchEstates();
+      
+      // Fetch estates after a short delay to ensure backend has committed
+      setTimeout(() => {
+        fetchEstates();
+      }, 500);
     } catch (error) {
       console.error('Error adding estate:', error);
       showLiveAlert('Failed to add estate: ' + error.message, 'danger');
@@ -249,30 +266,41 @@ const AddEstate = () => {
         title: formData.title,
         description: formData.description,
         location: formData.location,
-        price: parseFloat(formData.price),
+        price: formData.price,
         currency: formData.currency,
         listing_type: formData.listing_type,
-        bedrooms: parseInt(formData.bedrooms) || 0,
-        bathrooms: parseInt(formData.bathrooms) || 0,
-        area: parseFloat(formData.area) || 0,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        area: formData.area,
         property_type: formData.property_type,
         status: formData.status,
-        image_url: formData.image_url,
-        updated_at: new Date().toISOString()
+        image_url: formData.image_url
       };
 
-      const { error } = await supabase
-        .from('real_estates')
-        .update(estateData)
-        .eq('id', selectedEstate.id);
+      // Use backend API instead of direct Supabase call
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/estate/update/${selectedEstate.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(estateData)
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to update estate');
+      }
 
       showLiveAlert('Real estate updated successfully!', 'success');
       setShowEditModal(false);
       setSelectedEstate(null);
       resetForm();
-      fetchEstates();
+      
+      // Fetch estates after a short delay
+      setTimeout(() => {
+        fetchEstates();
+      }, 500);
     } catch (error) {
       console.error('Error updating estate:', error);
       showLiveAlert('Failed to update estate: ' + error.message, 'danger');
@@ -285,15 +313,23 @@ const AddEstate = () => {
     if (!window.confirm('Are you sure you want to delete this property?')) return;
 
     try {
-      const { error } = await supabase
-        .from('real_estates')
-        .delete()
-        .eq('id', id);
+      // Use backend API instead of direct Supabase call
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/estate/delete/${id}`, {
+        method: 'DELETE'
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to delete estate');
+      }
 
       showLiveAlert('Real estate deleted successfully!', 'success');
-      fetchEstates();
+      
+      // Fetch estates after a short delay
+      setTimeout(() => {
+        fetchEstates();
+      }, 500);
     } catch (error) {
       console.error('Error deleting estate:', error);
       showLiveAlert('Failed to delete estate: ' + error.message, 'danger');
