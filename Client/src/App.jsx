@@ -34,6 +34,7 @@ import CourseManagement from './components/Admin/pages/CourseManagement.jsx';
 import WithdrawRequest from './components/Admin/pages/Withdrawrequest.jsx';
 import AddEstate from './components/Admin/pages/AddEstate.jsx';
 import SystemConfig from './components/Admin/pages/SystemConfig.jsx';
+import AdminCrypto from './components/Admin/pages/AdminCrypto.jsx'
 
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { useAuth } from './context/AuthProvider';  // ← NEW: useAuth instead of useUser
@@ -138,6 +139,15 @@ const Layout = () => {
             element={
               <AdminProtected>
                 <AddEstate />
+              </AdminProtected>
+            }
+          />
+          
+          <Route
+            path="/admin/userspaymentcrypto"
+            element={
+              <AdminProtected>
+                <AdminCrypto />
               </AdminProtected>
             }
           />

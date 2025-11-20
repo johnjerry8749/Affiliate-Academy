@@ -15,6 +15,7 @@ import mailRoutes from './routes/mail.js';
 import adminLoginRouter from './routes/adminAuth.js';
 import Adminrouter from './routes/adminRoutes.js';
 import systemConfig from './routes/systemSettingsRoutes.js';
+import withdrawalRoutes from './routes/withdrawal.js';
 
 // Simple CORS setup
 app.use(cors({
@@ -32,6 +33,7 @@ app.use('/api', mailRoutes);
 app.use('/api/adminlogin', adminLoginRouter);
 app.use('/api/admin', Adminrouter);
 app.use('/api/setting', systemConfig);
+app.use('/api/withdrawal', withdrawalRoutes);
 
 const PORT = process.env.PORT || 5000;
 

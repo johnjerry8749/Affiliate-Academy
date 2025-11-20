@@ -3,16 +3,17 @@ import AdminSidebar from '../adminLayout/AdminSidebar';
 import Smallfooter from '../../Users/UserLayout/smallfooter';
 import { supabase } from '../../../../supabase';
 
-const Withdrawrequest = () => {
-  const [withdrawals, setWithdrawals] = useState([]);
+const AdminCrypto = () => {
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalWithdrawals, setTotalWithdrawals] = useState(0);
+  const [totalPayments, setTotalPayments] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const withdrawalsPerPage = 10;
+  const [selectedProof, setSelectedProof] = useState(null);
+  const paymentsPerPage = 10;
 
   // Live Alert Function
   const showLiveAlert = (message, type = 'success') => {
@@ -59,95 +60,94 @@ const Withdrawrequest = () => {
     }
   }, []);
 
-  const fetchWithdrawals = async () => {
+  const fetchPayments = async () => {
     setLoading(true);
     try {
-      // First, fetch withdrawal requests
       let query = supabase
-        .from('withdrawal_requests')
-        .select('*, account_details', { count: 'exact' })
-        .order('request_date', { ascending: false });
+        .from('crypto_payments')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false });
 
       if (filterStatus !== 'all') {
         query = query.eq('status', filterStatus);
       }
 
       if (searchQuery.trim()) {
-        query = query.or(`transaction_id.ilike.%${searchQuery}%,amount.eq.${parseFloat(searchQuery) || 0}`);
+        query = query.or(`wallet_address.ilike.%${searchQuery}%,wallet_name.ilike.%${searchQuery}%`);
       }
 
-      const from = (currentPage - 1) * withdrawalsPerPage;
-      const to = from + withdrawalsPerPage - 1;
+      const from = (currentPage - 1) * paymentsPerPage;
+      const to = from + paymentsPerPage - 1;
       query = query.range(from, to);
 
-      const { data: withdrawalData, error: withdrawalError, count } = await query;
+      const { data: paymentData, error: paymentError, count } = await query;
 
-      if (withdrawalError) throw withdrawalError;
+      if (paymentError) throw paymentError;
 
-      // Fetch user data for each withdrawal
-      if (withdrawalData && withdrawalData.length > 0) {
-        const userIds = [...new Set(withdrawalData.map(w => w.user_id))];
+      // Fetch user data for each payment
+      if (paymentData && paymentData.length > 0) {
+        const userIds = [...new Set(paymentData.map(p => p.user_id))];
         
         const { data: usersData, error: usersError } = await supabase
           .from('users')
-          .select('id, full_name, email, bank_name, account_number, payment_method, currency')
+          .select('id, full_name, email')
           .in('id', userIds);
 
         if (usersError) throw usersError;
 
-        // Map users to withdrawals
-        const withdrawalsWithUsers = withdrawalData.map(withdrawal => ({
-          ...withdrawal,
-          users: usersData.find(user => user.id === withdrawal.user_id) || null
+        // Map users to payments
+        const paymentsWithUsers = paymentData.map(payment => ({
+          ...payment,
+          user: usersData.find(user => user.id === payment.user_id) || null
         }));
 
-        setWithdrawals(withdrawalsWithUsers);
+        setPayments(paymentsWithUsers);
       } else {
-        setWithdrawals([]);
+        setPayments([]);
       }
 
-      setTotalWithdrawals(count || 0);
+      setTotalPayments(count || 0);
     } catch (error) {
-      console.error('Error fetching withdrawals:', error);
-      showLiveAlert('Failed to fetch withdrawal requests', 'danger');
+      console.error('Error fetching crypto payments:', error);
+      showLiveAlert('Failed to fetch crypto payments', 'danger');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWithdrawals();
+    fetchPayments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, searchQuery, filterStatus]);
 
-  const updateWithdrawalStatus = async (withdrawalId, newStatus) => {
+  const updatePaymentStatus = async (paymentId, newStatus) => {
     try {
-      console.log('Updating withdrawal:', withdrawalId, 'to status:', newStatus);
+      console.log('Updating payment:', paymentId, 'to status:', newStatus);
       
-      // Use backend API instead of direct Supabase
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/withdrawal/update-status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          withdrawalId,
-          status: newStatus
-        })
-      });
+      const updateData = {
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+      };
 
-      const result = await response.json();
+      console.log('Update data:', updateData);
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to update withdrawal status');
+      const { data, error } = await supabase
+        .from('crypto_payments')
+        .update(updateData)
+        .eq('id', paymentId)
+        .select();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
       }
 
-      console.log('Update successful:', result);
-      showLiveAlert(`Withdrawal ${newStatus} successfully!`, 'success');
-      fetchWithdrawals();
+      console.log('Update successful:', data);
+      showLiveAlert(`Payment ${newStatus} successfully!`, 'success');
+      fetchPayments();
     } catch (error) {
-      console.error('Error updating withdrawal status:', error);
-      showLiveAlert('Failed to update withdrawal status: ' + error.message, 'danger');
+      console.error('Error updating payment status:', error);
+      showLiveAlert('Failed to update payment status: ' + error.message, 'danger');
     }
   };
 
@@ -163,30 +163,24 @@ const Withdrawrequest = () => {
     });
   };
 
-  const formatCurrency = (amount, currency = 'USD') => {
-    const symbols = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'NGN': '₦',
-      'GHS': '₵',
-      'KES': 'KSh',
-      'ZAR': 'R'
-    };
-    return `${symbols[currency] || '$'}${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
   const getStatusBadge = (status) => {
     const badges = {
       'pending': 'bg-warning text-dark',
-      'approved': 'bg-info text-white',
-      'processed': 'bg-success text-white',
+      'approved': 'bg-success text-white',
       'rejected': 'bg-danger text-white'
     };
     return badges[status] || 'bg-secondary text-white';
   };
 
-  const totalPages = Math.ceil(totalWithdrawals / withdrawalsPerPage);
+  const openProofModal = (proofUrl) => {
+    setSelectedProof(proofUrl);
+  };
+
+  const closeProofModal = () => {
+    setSelectedProof(null);
+  };
+
+  const totalPages = Math.ceil(totalPayments / paymentsPerPage);
 
   return (
     <>
@@ -202,13 +196,13 @@ const Withdrawrequest = () => {
             to { transform: translateY(0); opacity: 1; }
           }
 
-          .withdrawal-card {
+          .payment-card {
             transition: all 0.3s ease;
             border: 1px solid #e0e0e0;
             background-color: white !important;
           }
 
-          .withdrawal-card:hover {
+          .payment-card:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transform: translateY(-2px);
           }
@@ -235,8 +229,27 @@ const Withdrawrequest = () => {
             background-color: white !important;
           }
 
+          .proof-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+          }
+
+          .proof-thumbnail:hover {
+            transform: scale(1.1);
+          }
+
+          .modal-proof-image {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+          }
+
           @media (max-width: 768px) {
-            .withdrawal-card {
+            .payment-card {
               margin-bottom: 1rem;
             }
           }
@@ -257,6 +270,34 @@ const Withdrawrequest = () => {
           }}
         ></div>
         
+        {/* Proof Image Modal */}
+        {selectedProof && (
+          <div 
+            className="modal fade show d-block" 
+            style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+            onClick={closeProofModal}
+          >
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content bg-transparent border-0">
+                <div className="modal-body text-center p-0">
+                  <button 
+                    type="button" 
+                    className="btn-close btn-close-white position-absolute top-0 end-0 m-3" 
+                    onClick={closeProofModal}
+                    style={{ zIndex: 1 }}
+                  ></button>
+                  <img 
+                    src={selectedProof} 
+                    alt="Payment Proof" 
+                    className="modal-proof-image"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div 
           className="main-content flex-grow-1 p-3 p-md-4"
           style={{
@@ -269,10 +310,10 @@ const Withdrawrequest = () => {
         >
           <div className="mb-4 mt-5">
             <h2 className="mb-2 fw-bold">
-              <i className="bi bi-cash-stack me-2 text-primary"></i>
-              Withdrawal Requests
+              <i className="bi bi-currency-bitcoin me-2 text-primary"></i>
+              Crypto Payment Approvals
             </h2>
-            <p className="text-muted">Manage and process user withdrawal requests</p>
+            <p className="text-muted">Review and approve user crypto payment proofs</p>
           </div>
 
           <div className="card mb-4 shadow-sm">
@@ -286,7 +327,7 @@ const Withdrawrequest = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Search by transaction ID or amount..."
+                      placeholder="Search by wallet address or name..."
                       value={searchQuery}
                       onChange={(e) => {
                         setSearchQuery(e.target.value);
@@ -307,7 +348,6 @@ const Withdrawrequest = () => {
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
-                    <option value="processed">Processed</option>
                     <option value="rejected">Rejected</option>
                   </select>
                 </div>
@@ -315,7 +355,7 @@ const Withdrawrequest = () => {
                   <div className="d-flex align-items-center h-100">
                     <small className="text-muted">
                       <i className="bi bi-info-circle me-1"></i>
-                      Total: {totalWithdrawals} requests
+                      Total: {totalPayments} payments
                     </small>
                   </div>
                 </div>
@@ -328,14 +368,14 @@ const Withdrawrequest = () => {
               <div className="spinner-border text-primary" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
-              <p className="mt-3 text-muted">Loading withdrawal requests...</p>
+              <p className="mt-3 text-muted">Loading crypto payments...</p>
             </div>
-          ) : withdrawals.length === 0 ? (
+          ) : payments.length === 0 ? (
             <div className="card shadow-sm">
               <div className="card-body text-center py-5">
                 <i className="bi bi-inbox display-1 text-muted mb-3"></i>
-                <h5 className="text-muted">No withdrawal requests found</h5>
-                <p className="text-muted">There are no withdrawal requests matching your criteria.</p>
+                <h5 className="text-muted">No crypto payments found</h5>
+                <p className="text-muted">There are no crypto payments matching your criteria.</p>
               </div>
             </div>
           ) : (
@@ -358,65 +398,62 @@ const Withdrawrequest = () => {
                     <table className="table table-hover mb-0">
                       <thead style={{ backgroundColor: '#f8f9fa' }}>
                         <tr>
-                          <th className="border-0 py-3 ps-4">Transaction ID</th>
-                          <th className="border-0 py-3">User</th>
-                          <th className="border-0 py-3">Amount</th>
-                          <th className="border-0 py-3">Bank Details</th>
+                          <th className="border-0 py-3 ps-4">User ID</th>
+                          <th className="border-0 py-3">Wallet Info</th>
+                          <th className="border-0 py-3">Payment Proof</th>
                           <th className="border-0 py-3">Status</th>
-                          <th className="border-0 py-3">Request Date</th>
+                          <th className="border-0 py-3">Submitted</th>
                           <th className="border-0 py-3">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {withdrawals.map((withdrawal) => (
-                          <tr key={withdrawal.id}>
+                        {payments.map((payment) => (
+                          <tr key={payment.id}>
                             <td className="ps-4">
-                              <small className="font-monospace text-muted">
-                                {withdrawal.transaction_id || withdrawal.id.slice(0, 8)}
-                              </small>
-                            </td>
-                            <td>
                               <div>
-                                <strong>{withdrawal.users?.full_name || 'N/A'}</strong>
-                                <br />
-                                <small className="text-muted">{withdrawal.users?.email || 'N/A'}</small>
-                              </div>
-                            </td>
-                            <td>
-                              <strong className="text-primary">
-                                {formatCurrency(withdrawal.amount, withdrawal.currency || withdrawal.users?.currency)}
-                              </strong>
-                            </td>
-                            <td>
-                              <div>
-                                <small>
-                                  {/* <strong>Bank:</strong> {withdrawal.account_details || withdrawal.users?.bank_name || 'N/A'}<br /> */}
-                                  <strong>Account:</strong> {withdrawal.account_details || 'N/A'}<br />
+                                <small className="font-monospace text-muted">
+                                  {payment.user_id || 'N/A'}
                                 </small>
                               </div>
                             </td>
                             <td>
-                              <span className={`badge status-badge ${getStatusBadge(withdrawal.status)}`}>
-                                {withdrawal.status?.toUpperCase()}
+                              <div>
+                                <small>
+                                  <strong>Wallet:</strong> {payment.wallet_name}<br />
+                                  <strong>Address:</strong> <span className="font-monospace text-muted">{payment.wallet_address.slice(0, 20)}...</span>
+                                </small>
+                              </div>
+                            </td>
+                            <td>
+                              <img 
+                                src={payment.payment_proof_url} 
+                                alt="Payment Proof" 
+                                className="proof-thumbnail"
+                                onClick={() => openProofModal(payment.payment_proof_url)}
+                              />
+                            </td>
+                            <td>
+                              <span className={`badge status-badge ${getStatusBadge(payment.status)}`}>
+                                {payment.status?.toUpperCase()}
                               </span>
                             </td>
                             <td>
-                              <small>{formatDate(withdrawal.request_date)}</small>
+                              <small>{formatDate(payment.created_at)}</small>
                             </td>
                             <td>
                               <div className="d-flex gap-2">
                                 <button
                                   className="btn btn-sm btn-success"
-                                  onClick={() => updateWithdrawalStatus(withdrawal.id, 'approved')}
-                                  disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
+                                  onClick={() => updatePaymentStatus(payment.id, 'approved')}
+                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-check-circle me-1"></i>
-                                  Mark as Paid
+                                  Approve
                                 </button>
                                 <button
                                   className="btn btn-sm btn-danger"
-                                  onClick={() => updateWithdrawalStatus(withdrawal.id, 'rejected')}
-                                  disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
+                                  onClick={() => updatePaymentStatus(payment.id, 'rejected')}
+                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-x-circle me-1"></i>
                                   Reject
@@ -451,68 +488,65 @@ const Withdrawrequest = () => {
                     scrollbarWidth: 'thin',
                     scrollbarColor: '#cbd5e0 #f7fafc'
                   }}>
-                    <table className="table table-hover mb-0" style={{ minWidth: '1000px' }}>
+                    <table className="table table-hover mb-0" style={{ minWidth: '900px' }}>
                       <thead style={{ backgroundColor: '#f8f9fa' }}>
                         <tr>
-                          <th className="border-0 py-3 ps-4" style={{ minWidth: '150px' }}>Transaction ID</th>
-                          <th className="border-0 py-3" style={{ minWidth: '220px' }}>User</th>
-                          <th className="border-0 py-3" style={{ minWidth: '120px' }}>Amount</th>
-                          <th className="border-0 py-3" style={{ minWidth: '200px' }}>Bank Details</th>
-                          <th className="border-0 py-3" style={{ minWidth: '110px' }}>Status</th>
-                          <th className="border-0 py-3" style={{ minWidth: '150px' }}>Request Date</th>
-                          <th className="border-0 py-3" style={{ minWidth: '260px' }}>Actions</th>
+                          <th className="border-0 py-3 ps-4" style={{ minWidth: '200px' }}>User ID</th>
+                          <th className="border-0 py-3" style={{ minWidth: '200px' }}>Wallet Info</th>
+                          <th className="border-0 py-3" style={{ minWidth: '100px' }}>Proof</th>
+                          <th className="border-0 py-3" style={{ minWidth: '100px' }}>Status</th>
+                          <th className="border-0 py-3" style={{ minWidth: '150px' }}>Submitted</th>
+                          <th className="border-0 py-3" style={{ minWidth: '220px' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {withdrawals.map((withdrawal) => (
-                          <tr key={withdrawal.id}>
+                        {payments.map((payment) => (
+                          <tr key={payment.id}>
                             <td className="ps-4">
-                              <small className="font-monospace text-muted">
-                                {withdrawal.transaction_id || withdrawal.id.slice(0, 8)}
-                              </small>
-                            </td>
-                            <td>
                               <div>
-                                <strong>{withdrawal.users?.full_name || 'N/A'}</strong>
-                                <br />
-                                <small className="text-muted">{withdrawal.users?.email || 'N/A'}</small>
-                              </div>
-                            </td>
-                            <td>
-                              <strong className="text-primary">
-                                {formatCurrency(withdrawal.amount, withdrawal.currency || withdrawal.users?.currency)}
-                              </strong>
-                            </td>
-                            <td>
-                              <div>
-                                <small>
-                                  <strong>Bank:</strong> {withdrawal.account_details?.bank_name || withdrawal.users?.bank_name || 'N/A'}<br />
-                                  <strong>Account:</strong> {withdrawal.account_details?.account_number || withdrawal.users?.account_number || 'N/A'}<br />
+                                <small className="font-monospace text-muted">
+                                  {payment.user_id || 'N/A'}
                                 </small>
                               </div>
                             </td>
                             <td>
-                              <span className={`badge status-badge ${getStatusBadge(withdrawal.status)}`}>
-                                {withdrawal.status?.toUpperCase()}
+                              <div>
+                                <small>
+                                  <strong>Wallet:</strong> {payment.wallet_name}<br />
+                                  <strong>Address:</strong> <span className="font-monospace text-muted">{payment.wallet_address.slice(0, 15)}...</span>
+                                </small>
+                              </div>
+                            </td>
+                            <td>
+                              <img 
+                                src={payment.payment_proof_url} 
+                                alt="Payment Proof" 
+                                className="proof-thumbnail"
+                                onClick={() => openProofModal(payment.payment_proof_url)}
+                              />
+                            </td>
+                            <td>
+                              <span className={`badge status-badge ${getStatusBadge(payment.status)}`}>
+                                {payment.status?.toUpperCase()}
                               </span>
                             </td>
                             <td>
-                              <small>{formatDate(withdrawal.request_date)}</small>
+                              <small>{formatDate(payment.created_at)}</small>
                             </td>
                             <td>
                               <div className="d-flex gap-2">
                                 <button
                                   className="btn btn-sm btn-success"
-                                  onClick={() => updateWithdrawalStatus(withdrawal.id, 'approved')}
-                                  disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
+                                  onClick={() => updatePaymentStatus(payment.id, 'approved')}
+                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-check-circle me-1"></i>
-                                  Mark as Paid
+                                  Approve
                                 </button>
                                 <button
                                   className="btn btn-sm btn-danger"
-                                  onClick={() => updateWithdrawalStatus(withdrawal.id, 'rejected')}
-                                  disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
+                                  onClick={() => updatePaymentStatus(payment.id, 'rejected')}
+                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-x-circle me-1"></i>
                                   Reject
@@ -576,4 +610,4 @@ const Withdrawrequest = () => {
   );
 };
 
-export default Withdrawrequest;
+export default AdminCrypto;
