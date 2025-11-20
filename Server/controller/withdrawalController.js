@@ -23,20 +23,47 @@ export const updateWithdrawalStatus = async (req, res) => {
 
     console.log(`Updating withdrawal ${withdrawalId} to status: ${status}`);
 
-    // Get withdrawal request details with user info
-    const { data: withdrawalData, error: fetchError } = await supabase
+    // First check if withdrawal exists
+    const { data: checkData, error: checkError } = await supabase
       .from('withdrawal_requests')
-      .select('*, users(full_name, email, currency)')
-      .eq('id', withdrawalId)
-      .single();
+      .select('id, user_id, amount, status, currency')
+      .eq('id', withdrawalId);
 
-    if (fetchError || !withdrawalData) {
-      console.error('Error fetching withdrawal:', fetchError);
+    console.log('Check result:', { checkData, checkError });
+
+    if (checkError) {
+      console.error('Error checking withdrawal:', checkError);
+      return res.status(500).json({
+        success: false,
+        message: 'Database error: ' + checkError.message
+      });
+    }
+
+    if (!checkData || checkData.length === 0) {
+      console.error('No withdrawal found with ID:', withdrawalId);
       return res.status(404).json({
         success: false,
         message: 'Withdrawal request not found'
       });
     }
+
+    const withdrawal = checkData[0];
+
+    // Get user info separately
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('full_name, email, currency')
+      .eq('id', withdrawal.user_id)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user:', userError);
+    }
+
+    const withdrawalData = {
+      ...withdrawal,
+      users: userData || null
+    };
 
     const updateData = {
       status,
