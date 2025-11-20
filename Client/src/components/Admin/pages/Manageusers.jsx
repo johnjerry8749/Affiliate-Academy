@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../adminLayout/AdminSidebar';
 import Smallfooter from '../../Users/UserLayout/smallfooter';
 import { supabase } from '../../../../supabase';
-import { fetchUsersList , deleteUserById} from '../../../api/adminApi';
+import { fetchUsersList, deleteUserById, getUserBalance ,updateUserBalance} from '../../../api/adminApi';
 
 
 
@@ -87,24 +87,24 @@ const Manageusers = () => {
 
 
 
- const fetchUsers = async () => {
-  try {
-    setLoading(true);
-    // const token = localStorage.getItem('adminToken'); // ensure this matches your stored key
-    const data = await fetchUsersList(token, currentPage, usersPerPage, searchQuery);
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      // const token = localStorage.getItem('adminToken'); // ensure this matches your stored key
+      const data = await fetchUsersList(token, currentPage, usersPerPage, searchQuery);
 
-    setUsers(data.users);
-    setTotalUsers(data.total);
-  } catch (error) {
-    setError(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      setUsers(data.users);
+      setTotalUsers(data.total);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-useEffect(() => {
-  fetchUsers();
-}, [currentPage, searchQuery]);
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, searchQuery]);
 
 
   const totalPages = Math.ceil(totalUsers / usersPerPage);
@@ -134,38 +134,28 @@ useEffect(() => {
     setActiveDropdown(null);
   };
 
+
+
   const handleEditBalance = async (user) => {
     setSelectedUser(user);
 
-    // Fetch existing balance data
     try {
-      const { data: balanceData } = await supabase
-        .from('user_balances')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const token = localStorage.getItem("adminToken");
 
-      if (balanceData) {
-        setEditedBalanceInfo({
-          available_balance: balanceData.available_balance || 0,
-          pending_balance: balanceData.pending_balance || 0,
-          total_earned: balanceData.total_earned || 0,
-          total_withdrawn: balanceData.total_withdrawn || 0,
-          currency: balanceData.currency || user.currency,
-        });
-      } else {
-        // Set default values if no balance record exists, use user's currency if available
-        setEditedBalanceInfo({
-          available_balance: 0,
-          pending_balance: 0,
-          total_earned: 0,
-          total_withdrawn: 0,
-          currency: user.currency,
-        });
-      }
+      // Call backend instead of Supabase
+      const balance = await getUserBalance(token, user.id);
+
+      setEditedBalanceInfo({
+        available_balance: balance.available_balance || 0,
+        pending_balance: balance.pending_balance || 0,
+        total_earned: balance.total_earned || 0,
+        total_withdrawn: balance.total_withdrawn || 0,
+        currency: balance.currency || user.currency,
+      });
+
     } catch (error) {
-      console.error('Error fetching balance:', error);
-      // Set default values on error, use user's currency if available
+      console.error("Error fetching balance:", error);
+
       setEditedBalanceInfo({
         available_balance: 0,
         pending_balance: 0,
@@ -178,6 +168,7 @@ useEffect(() => {
     setShowEditBalanceModal(true);
     setActiveDropdown(null);
   };
+
 
   const handleEditUserInfo = (user) => {
     setSelectedUser(user);
@@ -233,62 +224,92 @@ useEffect(() => {
       showLiveAlert('Server error. Try again later.', 'danger');
     }
   };
+const submitEditBalance = async () => {
+  if (!editedBalanceInfo.available_balance && editedBalanceInfo.available_balance !== 0) {
+    showLiveAlert('Please enter a valid balance amount', 'warning');
+    return;
+  }
 
+  try {
+    const token = localStorage.getItem('adminToken');
 
+    const balanceData = {
+      amount: Number(editedBalanceInfo.available_balance) || 0
+    };
 
-  const submitEditBalance = async () => {
-    if (!editedBalanceInfo.available_balance && editedBalanceInfo.available_balance !== 0) {
-      showLiveAlert('Please enter valid balance amounts', 'warning');
-      return;
-    }
+    const res = await updateUserBalance(token, selectedUser.id, balanceData);
 
-    try {
-      // Check if user has a balance record
-      const { data: existingBalance } = await supabase
-        .from('user_balances')
-        .select('*')
-        .eq('user_id', selectedUser.id)
-        .single();
-
-      const balanceData = {
-        available_balance: parseFloat(editedBalanceInfo.available_balance) || 0,
-        pending_balance: parseFloat(editedBalanceInfo.pending_balance) || 0,
-        total_earned: parseFloat(editedBalanceInfo.total_earned) || 0,
-        total_withdrawn: parseFloat(editedBalanceInfo.total_withdrawn) || 0,
-        currency: editedBalanceInfo.currency || 'USD',
-        updated_at: new Date().toISOString(),
-      };
-
-      if (existingBalance) {
-        // Update existing balance
-        const { error } = await supabase
-          .from('user_balances')
-          .update(balanceData)
-          .eq('user_id', selectedUser.id);
-
-        if (error) throw error;
-      } else {
-        // Create new balance record
-        const { error } = await supabase
-          .from('user_balances')
-          .insert({
-            user_id: selectedUser.id,
-            ...balanceData,
-          });
-
-        if (error) throw error;
-      }
-
-      showLiveAlert('Balance updated successfully!', 'success');
+    if (res.success) {
+      showLiveAlert(res.message || 'Balance updated successfully!', 'success');
       setShowEditBalanceModal(false);
       setEditedBalanceInfo({});
       setSelectedUser(null);
       fetchUsers();
-    } catch (error) {
-      console.error('Error updating balance:', error);
-      showLiveAlert('Failed to update balance', 'danger');
+    } else {
+      showLiveAlert(res.error || 'Failed to update balance', 'danger');
     }
-  };
+
+  } catch (error) {
+    console.error('Error updating balance:', error);
+    showLiveAlert(error.message || 'Failed to update balance', 'danger');
+  }
+};
+
+
+
+  // const submitEditBalance = async () => {
+  //   if (!editedBalanceInfo.available_balance && editedBalanceInfo.available_balance !== 0) {
+  //     showLiveAlert('Please enter valid balance amounts', 'warning');
+  //     return;
+  //   }
+
+  //   try {
+  //     // Check if user has a balance record
+  //     const { data: existingBalance } = await supabase
+  //       .from('user_balances')
+  //       .select('*')
+  //       .eq('user_id', selectedUser.id)
+  //       .single();
+
+  //     const balanceData = {
+  //       available_balance: parseFloat(editedBalanceInfo.available_balance) || 0,
+  //       pending_balance: parseFloat(editedBalanceInfo.pending_balance) || 0,
+  //       total_earned: parseFloat(editedBalanceInfo.total_earned) || 0,
+  //       total_withdrawn: parseFloat(editedBalanceInfo.total_withdrawn) || 0,
+  //       currency: editedBalanceInfo.currency || 'USD',
+  //       updated_at: new Date().toISOString(),
+  //     };
+
+  //     if (existingBalance) {
+  //       // Update existing balance
+  //       const { error } = await supabase
+  //         .from('user_balances')
+  //         .update(balanceData)
+  //         .eq('user_id', selectedUser.id);
+
+  //       if (error) throw error;
+  //     } else {
+  //       // Create new balance record
+  //       const { error } = await supabase
+  //         .from('user_balances')
+  //         .insert({
+  //           user_id: selectedUser.id,
+  //           ...balanceData,
+  //         });
+
+  //       if (error) throw error;
+  //     }
+
+  //     showLiveAlert('Balance updated successfully!', 'success');
+  //     setShowEditBalanceModal(false);
+  //     setEditedBalanceInfo({});
+  //     setSelectedUser(null);
+  //     fetchUsers();
+  //   } catch (error) {
+  //     console.error('Error updating balance:', error);
+  //     showLiveAlert('Failed to update balance', 'danger');
+  //   }
+  // };
 
   const submitEditUserInfo = async () => {
     if (!editedUserInfo.full_name || !editedUserInfo.email) {
@@ -322,26 +343,26 @@ useEffect(() => {
   };
 
 
-  
-const confirmDelete = async () => {
-  if (!userToDelete) return;
 
-  try {
-    const token = localStorage.getItem('adminToken');
-    if (!token) throw new Error('Missing admin token');
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
 
-    await deleteUserById(userToDelete.id, token);
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) throw new Error('Missing admin token');
 
-    showLiveAlert('User deleted successfully!', 'success');
-    fetchUsers(); // refresh list
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    showLiveAlert(error.message || 'Failed to delete user', 'danger');
-  }
+      await deleteUserById(userToDelete.id, token);
 
-  setShowDeleteConfirm(false);
-  setUserToDelete(null);
-};
+      showLiveAlert('User deleted successfully!', 'success');
+      fetchUsers(); // refresh list
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showLiveAlert(error.message || 'Failed to delete user', 'danger');
+    }
+
+    setShowDeleteConfirm(false);
+    setUserToDelete(null);
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

@@ -69,6 +69,44 @@ export const fetchUsersList = async (token, page = 1, limit = 10, search = '') =
 };
 
 
+export const getUserBalance = async (token, userId) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/admin/user_balance/${userId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    return response.data.balance;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to load user balance");
+  }
+};
+
+
+// Update a user's balance
+export const updateUserBalance = async (token, userId, balanceData) => {
+  try {
+    const response = await axiosInstance.put(
+      `/api/admin/user_balance/${userId}`,
+      balanceData, // this is the body sent to backend
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    return response.data; // { success: true, message, balance }
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || 'Failed to update user balance'
+    );
+  }
+};
+
+
+
+
 export const deleteUserById = async (userId, token) => {
   try {
     const res = await axiosInstance.delete(`/api/admin/users/${userId}`, {

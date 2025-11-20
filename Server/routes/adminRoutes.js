@@ -7,7 +7,9 @@ import {
     demoteAdmin, 
     getAllUsers, 
     deleteUser ,
-    getDashboardData
+    getDashboardData,
+    getUserBalance,
+    updateUserBalance
 } from '../controller/adminAuth.js';
 import {
     getAllCourses,
@@ -46,6 +48,15 @@ Adminrouter.get('/users', verifyAdminToken, getAllUsers);
  */
 Adminrouter.delete('/users/:id', verifyAdminToken, deleteUser);
 
+Adminrouter.get("/user_balance/:userId", verifyAdminToken, getUserBalance);
+
+
+
+Adminrouter.put(
+  '/user_balance/:userId',
+  verifyAdminToken,           // middleware to authenticate admin
+  updateUserBalance           // your controller function
+);
 // =============================================
 // ADMIN ROLE MANAGEMENT ROUTES
 // =============================================

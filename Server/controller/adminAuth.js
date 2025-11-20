@@ -79,6 +79,108 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const getUserBalance = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log('user id ', userId);
+
+    // Fetch ALL rows for that user
+    const { data, error } = await supabase
+      .from('referral_commissions')
+      .select('balance_amount')
+      .eq('referred_user_id', userId);
+
+    if (error) throw error;
+
+    console.log("Commission Rows:", data);
+
+    // If no rows → use empty array
+    const commissions = data || [];
+
+    // Sum all balances using reduce()
+    const totalBalance = commissions.reduce((sum, row) => {
+      return sum + Number(row.balance_amount || 0);
+    }, 0);
+
+    return res.status(200).json({
+      success: true,
+      balance: {
+        available_balance: totalBalance,
+        pending_balance: 0,
+        total_earned: totalBalance,
+        total_withdrawn: 0,
+        currency: req.user?.currency || "USD"
+      }
+    });
+
+  } catch (err) {
+    console.error("Balance fetch error:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Failed to fetch user balance"
+    });
+  }
+};
+
+
+export const updateUserBalance = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { amount } = req.body;
+    console.log('Updating balance for user:', userId, 'Amount:', amount);
+
+    // Validate input
+    if (amount === undefined || isNaN(amount)) {
+      return res.status(400).json({
+        success: false,
+        error: "Amount must be a valid number"
+      });
+    }
+
+    const numericAmount = Number(amount);
+
+    // 1️⃣ Delete all old rows for this user
+    const { error: deleteError } = await supabase
+      .from("referral_commissions")
+      .delete()
+      .eq("referred_user_id", userId);
+
+    if (deleteError) throw deleteError;
+
+    // 2️⃣ Insert a fresh row with the updated balance
+    const { data, error: insertError } = await supabase
+      .from("referral_commissions")
+      .insert([
+        {
+          referred_user_id: userId,
+          balance_amount: numericAmount
+        }
+      ])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    console.log('Balance updated successfully:', data);
+
+    return res.status(200).json({
+      success: true,
+      message: "User balance updated successfully",
+      updatedAmount: numericAmount,
+      balance: data
+    });
+
+  } catch (err) {
+    console.error("Update Balance Error:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Failed to update balance"
+    });
+  }
+};
+
+
+
 
 
 export const deleteUser = async (req, res) => {
