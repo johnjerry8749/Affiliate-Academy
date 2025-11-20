@@ -91,7 +91,21 @@ export const updateWithdrawalStatus = async (req, res) => {
       const userEmail = withdrawalData.users?.email;
       const userName = withdrawalData.users?.full_name || 'Valued Member';
       const amount = withdrawalData.amount;
-      const currency = withdrawalData.users?.currency || withdrawalData.currency || 'USD';
+      
+      // Always fetch user's currency directly from database to ensure accuracy
+      console.log('Fetching user currency from database...');
+      const { data: currencyData, error: currencyError } = await supabase
+        .from('users')
+        .select('currency')
+        .eq('id', withdrawal.user_id)
+        .single();
+      
+      if (currencyError) {
+        console.error('Error fetching user currency:', currencyError);
+      }
+      
+      const currency = currencyData?.currency;
+      console.log('User currency:', currency);
       
       // Currency symbols
       const currencySymbols = {
@@ -103,14 +117,14 @@ export const updateWithdrawalStatus = async (req, res) => {
         'KES': 'KSh',
         'ZAR': 'R'
       };
-      const symbol = currencySymbols[currency] || '$';
+      const symbol = currencySymbols[currency] || currency;
 
       if (userEmail) {
         if (status === 'approved') {
           // Send approval email
           await sendEmailDirect({
             to: userEmail,
-            subject: '✅ Withdrawal Request Approved',
+            subject: ' Withdrawal Request Approved',
             message: `
               <p>Great news! Your withdrawal request has been approved and processed.</p>
               <p><strong>Withdrawal Details:</strong></p>
@@ -125,7 +139,7 @@ export const updateWithdrawalStatus = async (req, res) => {
             `,
             name: userName
           });
-          console.log(`✅ Approval email sent to ${userEmail}`);
+          console.log(` Approval email sent to ${userEmail}`);
         } else if (status === 'rejected') {
           // Send rejection email
           await sendEmailDirect({
@@ -151,7 +165,7 @@ export const updateWithdrawalStatus = async (req, res) => {
             `,
             name: userName
           });
-          console.log(`📧 Rejection email sent to ${userEmail}`);
+          console.log(` Rejection email sent to ${userEmail}`);
         }
       }
     } catch (emailError) {
