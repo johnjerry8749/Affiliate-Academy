@@ -21,7 +21,7 @@ import estateRoutes from './routes/estate.js';
 
 // Simple CORS setup
 app.use(cors({
-  origin: ['http://localhost:5174', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
+  origin: ['http://localhost:5174', 'https://affiliate-academy-e8o9.vercel.app','http://localhost:5173'], // Your specific frontend URLs
   credentials: true
 }));
 
