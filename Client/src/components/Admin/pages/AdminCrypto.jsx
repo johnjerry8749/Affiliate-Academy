@@ -467,99 +467,83 @@ const AdminCrypto = () => {
                   </div>
                 </div>
               </div>
+{/* Mobile-Optimized Card View (replaces full table on small screens) */}
+<div className="d-lg-none">
+  {payments.map((payment) => (
+    <div
+      key={payment.id}
+      className="card mb-3 shadow-sm border-0"
+      style={{ borderRadius: '12px', overflow: 'hidden' }}
+    >
+      <div className="card-body p-3">
+        {/* Header: User ID + Status */}
+        <div className="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <small className="text-muted d-block">User ID</small>
+            <span className="font-monospace fw-bold">
+              {payment.user_id || 'N/A'}
+            </span>
+          </div>
+          <span className={`badge ${getStatusBadge(payment.status)} fs-6`}>
+            {payment.status?.toUpperCase()}
+          </span>
+        </div>
 
-              {/* Mobile Table View */}
-              <div className="card border-0 shadow-sm d-lg-none" style={{ 
-                overflow: 'visible',
-                backgroundColor: 'transparent',
-                boxShadow: 'none'
-              }}>
-                <div className="card-body p-0" style={{
-                  backgroundColor: 'transparent'
-                }}>
-                  <div style={{ 
-                    position: 'relative',
-                    overflowX: 'auto',
-                    overflowY: 'visible',
-                    WebkitOverflowScrolling: 'touch',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#cbd5e0 #f7fafc'
-                  }}>
-                    <table className="table table-hover mb-0" style={{ minWidth: '900px' }}>
-                      <thead style={{ backgroundColor: '#f8f9fa' }}>
-                        <tr>
-                          <th className="border-0 py-3 ps-4" style={{ minWidth: '200px' }}>User ID</th>
-                          <th className="border-0 py-3" style={{ minWidth: '200px' }}>Wallet Info</th>
-                          <th className="border-0 py-3" style={{ minWidth: '100px' }}>Proof</th>
-                          <th className="border-0 py-3" style={{ minWidth: '100px' }}>Status</th>
-                          <th className="border-0 py-3" style={{ minWidth: '150px' }}>Submitted</th>
-                          <th className="border-0 py-3" style={{ minWidth: '220px' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payments.map((payment) => (
-                          <tr key={payment.id}>
-                            <td className="ps-4">
-                              <div>
-                                <small className="font-monospace text-muted">
-                                  {payment.user_id || 'N/A'}
-                                </small>
-                              </div>
-                            </td>
-                            <td>
-                              <div>
-                                <small>
-                                  <strong>Wallet:</strong> {payment.wallet_name}<br />
-                                  <strong>Address:</strong> <span className="font-monospace text-muted">{payment.wallet_address.slice(0, 15)}...</span>
-                                </small>
-                              </div>
-                            </td>
-                            <td>
-                              <img 
-                                src={payment.payment_proof_url} 
-                                alt="Payment Proof" 
-                                className="proof-thumbnail"
-                                onClick={() => openProofModal(payment.payment_proof_url)}
-                              />
-                            </td>
-                            <td>
-                              <span className={`badge status-badge ${getStatusBadge(payment.status)}`}>
-                                {payment.status?.toUpperCase()}
-                              </span>
-                            </td>
-                            <td>
-                              <small>{formatDate(payment.created_at)}</small>
-                            </td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <button
-                                  className="btn btn-sm btn-success"
-                                  onClick={() => updatePaymentStatus(payment.id, 'approved')}
-                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
-                                >
-                                  <i className="bi bi-check-circle me-1"></i>
-                                  Approve
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => updatePaymentStatus(payment.id, 'rejected')}
-                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
-                                >
-                                  <i className="bi bi-x-circle me-1"></i>
-                                  Reject
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
+        {/* Wallet Info */}
+        <div className="mb-3">
+          <small className="text-muted d-block">Wallet</small>
+          <div className="fw-medium">
+            {payment.wallet_name}
+            <br />
+            <span className="font-monospace text-muted small">
+              {payment.wallet_address.slice(0, 10)}...{payment.wallet_address.slice(-8)}
+            </span>
+          </div>
+        </div>
+
+        {/* Proof Thumbnail */}
+        <div className="mb-3 text-center">
+          <img
+            src={payment.payment_proof_url}
+            alt="Proof"
+            className="proof-thumbnail rounded"
+            style={{ 
+              maxHeight: '120px', 
+              cursor: 'pointer',
+              border: '1px solid #dee2e6'
+            }}
+            onClick={() => openProofModal(payment.payment_proof_url)}
+          />
+        </div>
+
+        {/* Submitted Date */}
+        <div className="text-muted small mb-3">
+          Submitted: {formatDate(payment.created_at)}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-success btn-sm flex-fill"
+            onClick={() => updatePaymentStatus(payment.id, 'approved')}
+            disabled={payment.status === 'approved' || payment.status === 'rejected'}
+          >
+            <i className="bi bi-check-circle me-1"></i>
+            Approve
+          </button>
+          <button
+            className="btn btn-danger btn-sm flex-fill"
+            onClick={() => updatePaymentStatus(payment.id, 'rejected')}
+            disabled={payment.status === 'approved' || payment.status === 'rejected'}
+          >
+            <i className="bi bi-x-circle me-1"></i>
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center mt-4">

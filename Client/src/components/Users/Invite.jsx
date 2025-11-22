@@ -32,9 +32,10 @@ const Invite = ({ embedded = false , numOfReferral}) => {
     try {
       // Fetch total invited users
       const { data: invites, error: inviteError } = await supabase
-        .from('user_referrals')
-        .select('*')
-        .eq('referrer_id', user.id)
+        .from('referral_commissions')
+          .select('balance_amount')
+          .eq('referrer_id', user.id);
+        // console.log('invites', invites)
 
       if (inviteError) throw inviteError
 
@@ -52,14 +53,19 @@ const Invite = ({ embedded = false , numOfReferral}) => {
       const totalCommission = commissions?.reduce((sum, comm) => sum + (comm.amount || 0), 0) || 0
 
       setStats({
-        totalInvites,
+        totalInvites: embedded && numOfReferral !== undefined ? numOfReferral : totalInvites,
         activeReferrals,
         totalCommission
       })
+      
 
     } catch (error) {
       console.error('Error fetching stats:', error)
-      setStats({ totalInvites: 0, totalCommission: 0, activeReferrals: 0 })
+      setStats({ 
+        totalInvites: embedded && numOfReferral !== undefined ? numOfReferral : 0, 
+        totalCommission: 0, 
+        activeReferrals: 0 
+      })
     } finally {
       setLoadingStats(false)
     }
@@ -67,7 +73,7 @@ const Invite = ({ embedded = false , numOfReferral}) => {
 
   useEffect(() => {
     fetchStats()
-  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.id, numOfReferral, embedded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Copy referral link
   const copyToClipboard = async () => {
@@ -257,18 +263,18 @@ const Invite = ({ embedded = false , numOfReferral}) => {
                             <i className="bi bi-person-plus me-1"></i>
                             Total Invites
                           </span>
-                          <span className="badge bg-primary">{stats.totalInvites || numOfReferral}</span>
+                          <span className="badge bg-primary">{stats.totalInvites}</span>
                         </div>
                         <div className="progress mb-2" style={{ height: '20px' }}>
                           <div 
                             className="progress-bar bg-primary" 
                             role="progressbar" 
-                            style={{ width: `${Math.min((stats.totalInvites|| numOfReferral / Math.max(stats.totalInvites || numOfReferral, 10)) * 100, 100)}%` }}
+                            style={{ width: `${Math.min((stats.totalInvites / Math.max(stats.totalInvites, 10)) * 100, 100)}%` }}
                             aria-valuenow={stats.totalInvites}
                             aria-valuemin="0" 
                             aria-valuemax="100"
                           >
-                            <span className="visually-hidden">{stats.totalInvites || numOfReferral} invites</span>
+                            <span className="visually-hidden">{stats.totalInvites} invites</span>
                           </div>
                         </div>
                         <small className="text-muted">Users you've invited</small>
@@ -283,7 +289,7 @@ const Invite = ({ embedded = false , numOfReferral}) => {
                     <div className="col-12">
                       <div className="bg-light rounded p-3">
                         <div className="text-center">
-                          <div className="text-primary fw-bold display-6">{stats.totalInvites || numOfReferral}</div>
+                          <div className="text-primary fw-bold display-6">{stats.totalInvites}</div>
                           <p className="text-muted mb-0">Total Users Invited</p>
                           <small className="text-muted">Keep sharing your referral link to invite more users!</small>
                         </div>
