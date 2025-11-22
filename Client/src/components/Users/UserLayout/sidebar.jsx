@@ -18,7 +18,7 @@ const Sidebar = () => {
     avatar:
       profile?.avatar_url ||
       'https://ui-avatars.com/api/?name=' +
-        encodeURIComponent(profile?.full_name || user?.email || 'User'),
+      encodeURIComponent(profile?.full_name || user?.email || 'User'),
     role: profile?.payment_method || 'Affiliate',
   };
 
@@ -41,7 +41,7 @@ const Sidebar = () => {
     { title: 'Real Estate', icon: 'bi-house', path: '/dashboard/Estate' },
     { title: 'Payment', icon: 'bi-credit-card', path: '/dashboard/payment' },
     { title: 'Invite', icon: 'bi-person-plus', path: '/dashboard/invite' },
-    
+
   ];
 
   return (
@@ -128,10 +128,13 @@ const Sidebar = () => {
             <div className="help-card">
               <i className="bi bi-question-circle"></i>
               <h6>Need Help?</h6>
-              <p>Check our documentation</p>
-              <Link to="/help" className="btn btn-sm btn-success">
+             <p class="text-muted">Join our Telegram group for support.</p>
+
+              <a href="https://t.me/+j25YB8mBs3kwNDE0"
+                target="_blank"
+                class="btn btn-success btn-sm px-3">
                 Get Help
-              </Link>
+              </a>
             </div>
           </div>
         )}
