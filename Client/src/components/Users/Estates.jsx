@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./UserLayout/sidebar";
 import Smallfooter from "./UserLayout/smallfooter";
-import { supabase } from "../../../supabase";
 
 const Estates = () => {
   const [estates, setEstates] = useState([]);
@@ -11,6 +10,7 @@ const Estates = () => {
   const [filterStatus, setFilterStatus] = useState("available");
   const [selectedEstate, setSelectedEstate] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
   useEffect(() => {
     fetchEstates();
@@ -20,25 +20,22 @@ const Estates = () => {
   const fetchEstates = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from("real_estates")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const params = new URLSearchParams();
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+      if (filterType !== 'all') params.append('listing_type', filterType);
 
-      if (filterStatus !== "all") {
-        query = query.eq("status", filterStatus);
+      const response = await fetch(`${backendURL}/api/estate/all?${params.toString()}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setEstates(result.estates || []);
+      } else {
+        console.error('Failed to fetch estates:', result.message);
+        setEstates([]);
       }
-
-      if (filterType !== "all") {
-        query = query.eq("listing_type", filterType);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setEstates(data || []);
     } catch (error) {
       console.error("Error fetching estates:", error);
+      setEstates([]);
     } finally {
       setLoading(false);
     }
@@ -355,12 +352,12 @@ const Estates = () => {
                         </span>
                       </div>
                       <div className="col-6 text-end">
-                        <h4 className="text-primary fw-bold mb-0">
+                        <h6 className="text-primary fw-bold mb-0">
                           {formatCurrency(
                             selectedEstate.price,
                             selectedEstate.currency
                           )}
-                        </h4>
+                        </h6>
                       </div>
                     </div>
                     <p className="text-muted mb-3">
@@ -425,10 +422,10 @@ const Estates = () => {
                     >
                       Close
                     </button>
-                    <button type="button" className="btn btn-primary">
+                    {/* <button type="button" className="btn btn-primary">
                       <i className="bi bi-envelope me-2"></i>
                       Contact Agent
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>

@@ -1,5 +1,48 @@
 import { supabase } from '../utils/supabaseClient.js';
 
+export const getAllEstates = async (req, res) => {
+  try {
+    const { listing_type, status } = req.query;
+
+    let query = supabase
+      .from('real_estates')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    if (listing_type && listing_type !== 'all') {
+      query = query.eq('listing_type', listing_type);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching estates:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch estates',
+        error: error.message
+      });
+    }
+
+    res.json({
+      success: true,
+      estates: data || []
+    });
+
+  } catch (error) {
+    console.error('Error in getAllEstates:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching estates',
+      error: error.message
+    });
+  }
+};
+
 export const uploadEstateImage = async (req, res) => {
   try {
     if (!req.files || !req.files.image) {

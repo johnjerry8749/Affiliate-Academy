@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../adminLayout/AdminSidebar';
 import Smallfooter from '../../Users/UserLayout/smallfooter';
-import { supabase } from '../../../../supabase';
 
 /**
  * IMPORTANT: Before using image upload, create a storage bucket in Supabase:
@@ -90,18 +89,20 @@ const AddEstate = () => {
   const fetchEstates = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('real_estates')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
       
-      console.log('Fetched estates:', data); // Debug log
-      setEstates(data || []);
+      // Use backend API instead of direct Supabase call
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/estate/all`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch estates');
+      }
+      
+      console.log('Fetched estates:', result.estates); // Debug log
+      setEstates(result.estates || []);
     } catch (error) {
       console.error('Error fetching estates:', error);
-      showLiveAlert('Failed to fetch estates', 'danger');
+      showLiveAlert('Failed to fetch estates: ' + error.message, 'danger');
     } finally {
       setLoading(false);
     }
@@ -355,11 +356,23 @@ const AddEstate = () => {
     setImagePreview('');
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price);
+  const formatPrice = (price, currency = 'USD') => {
+    const symbols = {
+      USD: '$',
+      EUR: '€',
+      GBP: '£',
+      NGN: '₦',
+      CAD: 'C$',
+      AUD: 'A$',
+      GHS: '₵',
+      KES: 'KSh',
+      ZAR: 'R'
+    };
+    const symbol = symbols[currency] || '$';
+    return `${symbol}${parseFloat(price).toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    })}`;
   };
 
   return (
@@ -676,81 +689,112 @@ const AddEstate = () => {
               </div>
             </div>
           ) : (
-            <div className="row g-4">
-              {estates.map((estate) => (
-                <div key={estate.id} className="col-12 col-md-6 col-lg-4">
-                  <div className="card h-100 shadow-sm hover-shadow">
-                    {estate.image_url && (
-                      <img 
-                        src={estate.image_url} 
-                        className="card-img-top" 
-                        alt={estate.title}
-                        style={{ height: '200px', objectFit: 'cover' }}
-                      />
-                    )}
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h5 className="card-title mb-0">{estate.title}</h5>
-                        <span className={`badge ${
-                          estate.status === 'available' ? 'bg-success' :
-                          estate.status === 'sold' ? 'bg-danger' :
-                          estate.status === 'pending' ? 'bg-warning text-dark' :
-                          'bg-info'
-                        }`}>
-                          {estate.status?.toUpperCase()}
-                        </span>
-                      </div>
-                      <p className="text-muted mb-2">
-                        <i className="bi bi-geo-alt me-1"></i>
-                        {estate.location}
-                      </p>
-                      <h4 className="text-primary mb-3">{formatPrice(estate.price)}</h4>
-                      <div className="row g-2 mb-3">
-                        <div className="col-4">
-                          <small className="text-muted d-block">
-                            <i className="bi bi-door-closed me-1"></i>
-                            {estate.bedrooms} Beds
-                          </small>
-                        </div>
-                        <div className="col-4">
-                          <small className="text-muted d-block">
-                            <i className="bi bi-droplet me-1"></i>
-                            {estate.bathrooms} Baths
-                          </small>
-                        </div>
-                        <div className="col-4">
-                          <small className="text-muted d-block">
-                            <i className="bi bi-arrows-angle-expand me-1"></i>
-                            {estate.area} sq ft
-                          </small>
-                        </div>
-                      </div>
-                      <p className="card-text text-muted small">
-                        {estate.description?.substring(0, 100)}
-                        {estate.description?.length > 100 && '...'}
-                      </p>
-                    </div>
-                    <div className="card-footer bg-white">
-                      <div className="d-flex gap-2">
-                        <button
-                          className="btn btn-sm btn-primary flex-fill"
-                          onClick={() => handleEditEstate(estate)}
-                        >
-                          <i className="bi bi-pencil me-1"></i>
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger flex-fill"
-                          onClick={() => handleDeleteEstate(estate.id)}
-                        >
-                          <i className="bi bi-trash me-1"></i>
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+            <div className="card shadow-sm" style={{ backgroundColor: 'white' }}>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-hover mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Location</th>
+                        <th>Price</th>
+                        <th>Type</th>
+                        <th>Beds/Baths</th>
+                        <th>Area</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {estates.map((estate) => (
+                        <tr key={estate.id}>
+                          <td>
+                            {estate.image_url ? (
+                              <img 
+                                src={estate.image_url} 
+                                alt={estate.title}
+                                style={{ 
+                                  width: '60px', 
+                                  height: '60px', 
+                                  objectFit: 'cover',
+                                  borderRadius: '4px'
+                                }}
+                              />
+                            ) : (
+                              <div 
+                                className="bg-light d-flex align-items-center justify-content-center"
+                                style={{ 
+                                  width: '60px', 
+                                  height: '60px',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                <i className="bi bi-image text-muted"></i>
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <strong>{estate.title}</strong>
+                            <br />
+                            <small className="text-muted text-capitalize">
+                              {estate.property_type}
+                            </small>
+                          </td>
+                          <td>
+                            <i className="bi bi-geo-alt text-muted me-1"></i>
+                            {estate.location}
+                          </td>
+                          <td>
+                            <strong className="text-primary">
+                              {formatPrice(estate.price, estate.currency)}
+                            </strong>
+                            <br />
+                            <small className="text-muted text-capitalize">
+                              For {estate.listing_type}
+                            </small>
+                          </td>
+                          <td className="text-capitalize">{estate.property_type}</td>
+                          <td>
+                            <i className="bi bi-door-closed me-1"></i>{estate.bedrooms}
+                            <span className="mx-1">/</span>
+                            <i className="bi bi-droplet me-1"></i>{estate.bathrooms}
+                          </td>
+                          <td>{estate.area} sqft</td>
+                          <td>
+                            <span className={`badge ${
+                              estate.status === 'available' ? 'bg-success' :
+                              estate.status === 'sold' ? 'bg-danger' :
+                              estate.status === 'pending' ? 'bg-warning text-dark' :
+                              'bg-info'
+                            }`}>
+                              {estate.status?.toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary"
+                                onClick={() => handleEditEstate(estate)}
+                                title="Edit"
+                              >
+                                <i className="bi bi-pencil"></i>
+                              </button>
+                              <button
+                                className="btn btn-outline-danger"
+                                onClick={() => handleDeleteEstate(estate.id)}
+                                title="Delete"
+                              >
+                                <i className="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
+              </div>
             </div>
           )}
 
