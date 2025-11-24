@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      
+
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
         setLoading(false);
         setProfileLoading(false);
@@ -75,6 +75,8 @@ export const AuthProvider = ({ children }) => {
     paymentMethod,
     agreedToTerms,
     referralCode,
+    paid = false, // accept paid flag (default false)
+    role = 'user',
   }) => {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -85,6 +87,7 @@ export const AuthProvider = ({ children }) => {
     if (authError) throw authError;
     if (!authData.user) throw new Error('No user');
 
+    // Persist user profile in `users` table including `paid` and `role`
     await supabase.from('users').insert({
       id: authData.user.id,
       full_name: fullName,
@@ -94,7 +97,8 @@ export const AuthProvider = ({ children }) => {
       currency: countries.find(c => c.code === country)?.currency ?? '',
       payment_method: paymentMethod,
       agreed_to_terms: agreedToTerms,
-      role: 'user',
+      role,
+      paid: paid,
     });
 
     await supabase.from('user_balances').insert({
@@ -137,12 +141,54 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Login
+  // const login = async (email, password) => {
+  //   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  //   if (error) throw error;
+  //   setUser(data.user);
+  //   await fetchProfile(data.user.id); // Waits for profile
+  //   return data;
+  // };
+  // Login - NOW BLOCKS UNPAID USERS
   const login = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    setUser(data.user);
-    await fetchProfile(data.user.id); // Waits for profile
-    return data;
+    try {
+      // Step 1: Try to sign in with Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      if (!data?.user) throw new Error('Login failed: No user returned');
+
+      // Step 2: Check the `paid` status in your custom `users` table
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .select('paid')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Failed to fetch user payment status:', profileError);
+        throw new Error('Login error. Please try again later.');
+      }
+
+      if (profileData?.paid === false) {
+        // Block login + force logout to be safe
+        await supabase.auth.signOut();
+        throw new Error(
+          'Your account is pending payment approval. You cannot log in yet. Please wait 24-48 hours after submitting your crypto payment proof.'
+        );
+      }
+
+      // Step 3: Only if paid === true → allow login
+      setUser(data.user);
+      await fetchProfile(data.user.id);
+      return data;
+
+    } catch (err) {
+      // Re-throw the error so your login form can show it
+      throw err;
+    }
   };
 
   // Logout
