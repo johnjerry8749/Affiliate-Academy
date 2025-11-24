@@ -323,7 +323,7 @@ const Register = () => {
                   <select id="paymentMethod" name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} required>
                     <option value="">Choose payment method</option>
                     <option value="paystack">Paystack (Card, Bank, USSD)</option>
-                    <option value="crypto">Cryptocurrency (Coming Soon)</option>
+                    <option value="crypto">Cryptocurrency</option>
                   </select>
                 </div>
               </div>

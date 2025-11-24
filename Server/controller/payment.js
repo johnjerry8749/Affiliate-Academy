@@ -313,7 +313,7 @@ export const verifyPaystack = async (req, res) => {
           if (walletUpdateError) {
             console.error('❌ Error updating company wallet (100%):', walletUpdateError);
           } else {
-            console.log(`✅ Company wallet updated: +₦${registrationFee} (Total: ₦${newTotalEarnings})`);
+            console.log(`✅ Company wallet updated: +$${registrationFee} USD (Total: $${newTotalEarnings} USD)`);
           }
         }
       } catch (companyWalletError) {
