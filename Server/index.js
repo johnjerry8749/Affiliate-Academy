@@ -18,10 +18,11 @@ import Adminrouter from './routes/adminRoutes.js';
 import systemConfig from './routes/systemSettingsRoutes.js';
 import withdrawalRoutes from './routes/withdrawal.js';
 import estateRoutes from './routes/estate.js';
+import cryptoRoutes from './routes/crypto.js';
 
 // Simple CORS setup
 app.use(cors({
-  origin: ['http://localhost:5174', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
+  origin: ['http://localhost:5173', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
   credentials: true
 }));
 
@@ -42,6 +43,7 @@ app.use('/api/admin', Adminrouter);
 app.use('/api/setting', systemConfig);
 app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/estate', estateRoutes);
+app.use('/api/crypto', cryptoRoutes);
 
 const PORT = process.env.PORT || 5000;
 

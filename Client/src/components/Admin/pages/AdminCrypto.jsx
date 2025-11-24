@@ -124,25 +124,25 @@ const AdminCrypto = () => {
     try {
       console.log('Updating payment:', paymentId, 'to status:', newStatus);
       
-      const updateData = {
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-      };
+      // Use backend API instead of direct Supabase
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/crypto/update-status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentId,
+          status: newStatus
+        })
+      });
 
-      console.log('Update data:', updateData);
+      const result = await response.json();
 
-      const { data, error } = await supabase
-        .from('crypto_payments')
-        .update(updateData)
-        .eq('id', paymentId)
-        .select();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to update payment status');
       }
 
-      console.log('Update successful:', data);
+      console.log('Update successful:', result);
       showLiveAlert(`Payment ${newStatus} successfully!`, 'success');
       fetchPayments();
     } catch (error) {

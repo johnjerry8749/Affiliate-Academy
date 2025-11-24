@@ -45,11 +45,24 @@ export const verifyPaystack = async (req, res) => {
   }    const { data } = result;
     const totalAmount = data.amount / 100; // Convert from kobo to naira
 
+    // Fetch registration fee from system_settings for commission calculation
+    const { data: systemSettings, error: settingsError } = await supabase
+      .from('system_settings')
+      .select('registration_fee_amount')
+      .single();
+
+    if (settingsError) {
+      console.error('Error fetching system settings:', settingsError);
+    }
+
+    const registrationFee = systemSettings?.registration_fee_amount || totalAmount;
+    console.log('Registration fee from settings:', registrationFee);
+
     // Get referrer ID and user ID from request body (POST) or metadata (GET)
     const referrerId = req.body?.referrer_id || data.metadata?.referrer_id || null;
     const newUserId = req.body?.user_id || data.metadata?.user_id || null;
 
-    console.log('Payment Info:', { totalAmount, referrerId, newUserId });
+    console.log('Payment Info:', { totalAmount, registrationFee, referrerId, newUserId });
 
     // SAVE TO SUPABASE with user_id and referral_code
     const { error: dbError } = await supabase
@@ -121,16 +134,16 @@ export const verifyPaystack = async (req, res) => {
       } else {
         console.log('Referrer found:', referrerExists.full_name, referrerExists.email);
 
-        // Split: 50% company, 50% referrer
-        const companyShare = totalAmount * 0.5;
-        const referrerTotal = totalAmount * 0.5;
+        // Split: 50% company, 50% referrer (using registration fee from settings)
+        const companyShare = registrationFee * 0.5;
+        const referrerTotal = registrationFee * 0.5;
 
         // From referrer's 50%: 10% commission + 40% balance
-        const commissionAmount = totalAmount * 0.1;  // 10% of total
-        const balanceAmount = totalAmount * 0.4;     // 40% of total
+        const commissionAmount = registrationFee * 0.1;  // 10% of total
+        const balanceAmount = registrationFee * 0.4;     // 40% of total
 
         console.log('Commission breakdown:', {
-          total: totalAmount,
+          total: registrationFee,
           companyShare,
           referrerTotal,
           commissionAmount,
@@ -274,9 +287,9 @@ export const verifyPaystack = async (req, res) => {
         console.log(`Company receives: ${companyShare}`);
       }
     } else {
-      console.log('No referrer - Company gets 100%:', totalAmount);
+      console.log('No referrer - Company gets 100%:', registrationFee);
       
-      // UPDATE COMPANY WALLET - Store 100% when no referral
+      // UPDATE COMPANY WALLET - Store 100% when no referral (using registration fee from settings)
       try {
         const { data: companyWallet, error: walletFetchError } = await supabase
           .from('company_wallet')
@@ -287,7 +300,7 @@ export const verifyPaystack = async (req, res) => {
           console.error('Error fetching company wallet:', walletFetchError);
         } else {
           const currentEarnings = companyWallet?.total_earnings || 0;
-          const newTotalEarnings = currentEarnings + totalAmount;
+          const newTotalEarnings = currentEarnings + registrationFee;
           const walletId = companyWallet?.id || '00000000-0000-0000-0000-000000000001';
 
           const { error: walletUpdateError } = await supabase
@@ -300,7 +313,7 @@ export const verifyPaystack = async (req, res) => {
           if (walletUpdateError) {
             console.error('❌ Error updating company wallet (100%):', walletUpdateError);
           } else {
-            console.log(`✅ Company wallet updated: +₦${totalAmount} (Total: ₦${newTotalEarnings})`);
+            console.log(`✅ Company wallet updated: +₦${registrationFee} (Total: ₦${newTotalEarnings})`);
           }
         }
       } catch (companyWalletError) {

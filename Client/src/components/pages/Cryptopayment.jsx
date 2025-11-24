@@ -248,7 +248,7 @@ const Cryptopayment = () => {
               {/* Wallet Amount */}
               <div className="mb-3 d-flex justify-content-center ">
                 <span className="badge bg-success fs-6" >
-                  Amount: {parseFloat(walletAmount || 0).toFixed(2)} 
+                  Amount: $ {parseFloat(walletAmount || 0).toFixed(2)} 
                 </span>
               </div>
 
