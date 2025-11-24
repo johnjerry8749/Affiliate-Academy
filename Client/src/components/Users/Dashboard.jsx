@@ -58,10 +58,11 @@ const Dashboard = () => {
       try {
         // Fetch user balance
         const { data: balanceData, error: balanceError } = await supabase
-          .from('referral_commissions')
-          .select('balance_amount')
-          .eq('referrer_id', user.id)
+          .from('user_balances')
+          .select('available_balance')
+          .eq('user_id', user.id)
           // .single();
+          console.log('user',balanceData)
          
           
       
@@ -105,8 +106,8 @@ const Dashboard = () => {
         console.log(totalReferrals)
         const totalCommissions = commissionData?.reduce((sum, comm) => sum + (comm.amount || 0), 0) || 0;
         const totalPayouts = payoutData?.reduce((sum, payout) => sum + (payout.amount || 0), 0) || 0;
-        const totalUserBalance = balanceData?.reduce((sum, totalBalance) => sum + (totalBalance.balance_amount || 0), 0) || 0;
-
+        const totalUserBalance = balanceData?.reduce((sum, totalBalance) => sum + (totalBalance.available_balance || 0), 0) || 0;
+        console.log('balance :' ,totalUserBalance)
         setDashboardData({
           stats: {
             totalCommission: {

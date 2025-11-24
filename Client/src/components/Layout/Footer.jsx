@@ -130,8 +130,8 @@ const Footer = () => {
             <ul className="list-unstyled footer-contact">
               <li className="mb-3 contact-item">
                 <i className="bi bi-telephone-fill text-success me-2"></i>
-                <a href="tel:+2347088341451" className="footer-link">
-                  +234-704-340-1308
+                <a href="tel:+1 (985) 397-1302" className="footer-link">
+                  +1 (985) 397-1302
                 </a>
               </li>
               <li className="mb-3 contact-item">

@@ -22,7 +22,7 @@ import cryptoRoutes from './routes/crypto.js';
 
 // Simple CORS setup
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
   credentials: true
 }));
 
