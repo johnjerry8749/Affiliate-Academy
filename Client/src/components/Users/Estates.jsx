@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./UserLayout/sidebar";
 import Smallfooter from "./UserLayout/smallfooter";
+import { useAuth } from "../../context/AuthProvider";
 
 const Estates = () => {
+  const { user } = useAuth();
   const [estates, setEstates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sendingInquiry, setSendingInquiry] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("available");
   const [selectedEstate, setSelectedEstate] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
   useEffect(() => {
@@ -72,6 +76,65 @@ const Estates = () => {
     setSelectedEstate(estate);
     setShowModal(true);
   };
+
+  const handleContactAgent = () => {
+    if (!user) {
+      alert('Please log in to contact an agent');
+      return;
+    }
+    setShowConfirmModal(true);
+  };
+
+  const confirmAndSendInquiry = async () => {
+    setShowConfirmModal(false);
+
+    try {
+      setSendingInquiry(true);
+
+      const response = await fetch(`${backendURL}/api/estate/contact-agent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          estate: {
+            id: selectedEstate.id,
+            title: selectedEstate.title,
+            location: selectedEstate.location,
+            price: selectedEstate.price,
+            currency: selectedEstate.currency,
+            listing_type: selectedEstate.listing_type,
+            property_type: selectedEstate.property_type,
+            bedrooms: selectedEstate.bedrooms,
+            bathrooms: selectedEstate.bathrooms,
+            area: selectedEstate.area,
+            image_url: selectedEstate.image_url,
+            agent_email: selectedEstate.agent_email
+          },
+          userId: user.id
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setInquiryAlert({ type: 'success', message: 'Your inquiry has been sent! An agent will contact you soon.' });
+        setTimeout(() => {
+          setInquiryAlert(null);
+          setShowModal(false);
+        }, 2500);
+      } else {
+        setInquiryAlert({ type: 'danger', message: 'Failed to send inquiry: ' + result.message });
+      }
+    } catch (error) {
+      console.error('Error sending inquiry:', error);
+      setInquiryAlert({ type: 'danger', message: 'Failed to send inquiry. Please try again.' });
+    } finally {
+      setSendingInquiry(false);
+    }
+  };
+
+  const [inquiryAlert, setInquiryAlert] = useState(null);
 
   return (
     <div>
@@ -273,7 +336,7 @@ const Estates = () => {
                             {estate.bathrooms} baths
                           </div>
                         </div>
-                        <div className="d-flex justify-content-between align-items-center">
+                        <div className=" justify-content-between align-items-center">
                           <h4 className="text-primary fw-bold mb-0">
                             {formatCurrency(estate.price, estate.currency)}
                           </h4>
@@ -315,6 +378,11 @@ const Estates = () => {
                     ></button>
                   </div>
                   <div className="modal-body">
+                    {inquiryAlert && (
+                      <div className={`alert alert-${inquiryAlert.type}`} role="alert">
+                        {inquiryAlert.message}
+                      </div>
+                    )}
                     <img
                       src={
                         selectedEstate.image_url ||
@@ -422,10 +490,100 @@ const Estates = () => {
                     >
                       Close
                     </button>
-                    {/* <button type="button" className="btn btn-primary">
-                      <i className="bi bi-envelope me-2"></i>
-                      Contact Agent
-                    </button> */}
+                    <button 
+                      type="button" 
+                      className="btn btn-primary"
+                      onClick={handleContactAgent}
+                      disabled={sendingInquiry}
+                    >
+                      {sendingInquiry ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-envelope me-2"></i>
+                         Send Inquires
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Confirmation Modal */}
+          {showConfirmModal && (
+            <div
+              className="modal fade show"
+              style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+              onClick={() => setShowConfirmModal(false)}
+            >
+              <div
+                className="modal-dialog modal-dialog-centered"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title fw-bold">
+                      <i className="bi bi-exclamation-circle text-warning me-2"></i>
+                      Confirm Inquiry
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setShowConfirmModal(false)}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <p className="mb-3">
+                      Are you sure you want to send an inquiry for this property?
+                    </p>
+                    <div className="card bg-light">
+                      <div className="card-body">
+                        <h6 className="fw-bold mb-2">{selectedEstate?.title}</h6>
+                        <p className="mb-1 text-muted small">
+                          <i className="bi bi-geo-alt me-1"></i>
+                          {selectedEstate?.location}
+                        </p>
+                        <p className="mb-0 text-primary fw-bold">
+                          {formatCurrency(selectedEstate?.price, selectedEstate?.currency)}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-3 mb-0 small text-muted">
+                      <i className="bi bi-info-circle me-1"></i>
+                      An agent will contact you via email or phone regarding this property.
+                    </p>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowConfirmModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={confirmAndSendInquiry}
+                      disabled={sendingInquiry}
+                    >
+                      {sendingInquiry ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-check-circle me-2"></i>
+                          Confirm & Send
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

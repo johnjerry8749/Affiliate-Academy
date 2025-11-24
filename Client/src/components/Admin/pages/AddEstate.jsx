@@ -34,7 +34,8 @@ const AddEstate = () => {
     area: '',
     property_type: 'house',
     status: 'available',
-    image_url: ''
+    image_url: '',
+    agent_email: ''
   });
 
   // Live Alert Function
@@ -203,7 +204,8 @@ const AddEstate = () => {
         area: formData.area,
         property_type: formData.property_type,
         status: formData.status,
-        image_url: formData.image_url
+        image_url: formData.image_url,
+        agent_email: formData.agent_email
       };
 
       // Use backend API instead of direct Supabase call
@@ -251,7 +253,8 @@ const AddEstate = () => {
       area: estate.area?.toString() || '',
       property_type: estate.property_type || 'house',
       status: estate.status || 'available',
-      image_url: estate.image_url || ''
+      image_url: estate.image_url || '',
+      agent_email: estate.agent_email || ''
     });
     setImagePreview(estate.image_url || '');
     setShowEditModal(true);
@@ -275,7 +278,8 @@ const AddEstate = () => {
         area: formData.area,
         property_type: formData.property_type,
         status: formData.status,
-        image_url: formData.image_url
+        image_url: formData.image_url,
+        agent_email: formData.agent_email
       };
 
       // Use backend API instead of direct Supabase call
@@ -350,7 +354,8 @@ const AddEstate = () => {
       area: '',
       property_type: 'house',
       status: 'available',
-      image_url: ''
+      image_url: '',
+      agent_email: ''
     });
     setImageFile(null);
     setImagePreview('');
@@ -587,6 +592,23 @@ const AddEstate = () => {
                         rows="4"
                         placeholder="Enter property description..."
                       ></textarea>
+                    </div>
+
+                    <div className="col-md-6">
+                      <label className="form-label fw-bold text-dark">
+                        Agent Email (Optional)
+                      </label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="agent_email"
+                        value={formData.agent_email}
+                        onChange={handleInputChange}
+                        placeholder="agent@example.com"
+                      />
+                      <small className="text-muted">
+                        If provided, inquiries will be sent to this agent
+                      </small>
                     </div>
 
                     <div className="col-12">
