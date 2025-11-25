@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthProvider';
 
 const Cryptopayment = () => {
   const { register } = useAuth();
-  const { state } = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -16,9 +16,19 @@ const Cryptopayment = () => {
   const [copied, setCopied] = useState(false);
   const [paymentProof, setPaymentProof] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const userData = state?.userData;
+  
+  // Get registration data from state or sessionStorage
+  const getRegistrationData = () => {
+    const stateData = location.state?.registrationData;
+    if (stateData) return stateData;
+    
+    const stored = sessionStorage.getItem('cryptoRegistrationData');
+    return stored ? JSON.parse(stored) : null;
+  };
+  
+  const userData = getRegistrationData();
 
-  console.log('i just passed', userData)
+  console.log('Registration data:', userData)
 
 
   // Live Alert Function
@@ -238,6 +248,9 @@ const Cryptopayment = () => {
 
       // Success!
       showLiveAlert('Payment proof submitted successfully! Awaiting approval (24-48 hrs)', 'success');
+      
+      // Clear sessionStorage
+      sessionStorage.removeItem('cryptoRegistrationData');
 
       // Redirect after 3 seconds
       setTimeout(() => {

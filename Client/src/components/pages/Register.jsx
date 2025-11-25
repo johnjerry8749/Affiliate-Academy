@@ -378,20 +378,24 @@ const Register = () => {
                   <p>Crypto payment selected</p>
                   <button 
                     className="register-button" 
-                    onClick={() => navigate('/crypto-payment', {
-                      state: {
-                        registrationData: {
-                          fullName: formData.fullName,
-                          email: formData.email,
-                          password: formData.password,
-                          phoneNumber: formData.phoneNumber,
-                          country: formData.country,
-                          paymentMethod: 'crypto',
-                          paymentRef,
-                          referralCode: referralCode || null
-                        }
-                      }
-                    })}
+                    onClick={() => {
+                      // Store in sessionStorage for persistence
+                      const registrationData = {
+                        fullName: formData.fullName,
+                        email: formData.email,
+                        password: formData.password,
+                        phoneNumber: formData.phoneNumber,
+                        country: formData.country,
+                        paymentMethod: 'crypto',
+                        paymentRef,
+                        referralCode: referralCode || null,
+                        agreedToTerms: formData.agreedToTerms
+                      };
+                      sessionStorage.setItem('cryptoRegistrationData', JSON.stringify(registrationData));
+                      navigate('/crypto-payment', {
+                        state: { registrationData }
+                      });
+                    }}
                     type="button"
                   >
                     Proceed to Crypto Payment <i className="bi bi-arrow-right"></i>
