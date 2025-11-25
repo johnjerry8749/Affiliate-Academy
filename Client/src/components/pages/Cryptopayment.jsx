@@ -246,6 +246,41 @@ const Cryptopayment = () => {
         throw new Error('Failed to save payment proof');
       }
 
+      // STEP 4: Send notification email to admin
+      try {
+        const adminResponse = await fetch(`${import.meta.env.VITE_API_URL}/mail/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: import.meta.env.VITE_ADMIN_EMAIL || 'affiliateacademy89@gmail.com',
+            subject: '🔔 New Crypto Payment Proof Uploaded',
+            message: `A new user has uploaded their crypto payment proof and is awaiting approval.
+            
+            User Details:
+            📧 Email: ${userData.email}
+            👤 Full Name: ${userData.fullName}
+            📱 Phone: ${userData.phoneNumber}
+            🌍 Country: ${userData.country}
+            
+            Payment Details:
+            💳 Wallet: ${walletName}
+            📍 Wallet Address: ${walletAddress}
+            
+            Please review and approve/reject this payment in the admin dashboard as soon as possible.
+            
+            View Payment Proof: ${urlData.publicUrl}`,
+            name: 'Admin Team'
+          })
+        });
+
+        if (adminResponse.ok) {
+          console.log('✅ Admin notification sent');
+        }
+      } catch (emailError) {
+        console.error('Failed to send admin notification:', emailError);
+        // Don't fail the submission if email fails
+      }
+
       // Success!
       showLiveAlert('Payment proof submitted successfully! Awaiting approval (24-48 hrs)', 'success');
       
