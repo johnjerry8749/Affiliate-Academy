@@ -3,6 +3,7 @@ import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet'
 import fileUpload from 'express-fileupload';
 import './services/mailservices.js';
 // import './seedAdmin.js'
@@ -27,6 +28,7 @@ app.use(cors({
 }));
 
 app.use(morgan('dev'));
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({

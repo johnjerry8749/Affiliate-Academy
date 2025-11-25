@@ -120,74 +120,7 @@ const AdminCrypto = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, searchQuery, filterStatus]);
 
-  // const updatePaymentStatus = async (paymentId, newStatus) => {
-  //   try {
-  //     console.log('Updating payment:', paymentId, 'to status:', newStatus);
 
-  //     // Step 1: Get the crypto payment record (to get user_id)
-  //     const { data: payment, error: fetchError } = await supabase
-  //       .from('crypto_payments')
-  //       .select('user_id, status')
-  //       .eq('id', paymentId)
-  //       .single();
-
-  //     if (fetchError) throw fetchError;
-  //     if (!payment) throw new Error('Payment not found');
-
-  //     // Prevent double-approval or changing rejected
-  //     if (payment.status === 'approved') {
-  //       showLiveAlert('This payment is already approved!', 'info');
-  //       return;
-  //     }
-  //     if (payment.status === 'rejected' && newStatus === 'approved') {
-  //       showLiveAlert('Cannot approve a rejected payment', 'warning');
-  //       return;
-  //     }
-
-  //     // Step 2: Update the crypto_payments table
-  //     const { data: updatedPayment, error: updateError } = await supabase
-  //       .from('crypto_payments')
-  //       .update({
-  //         status: newStatus,
-  //         updated_at: new Date().toISOString(),
-  //       })
-  //       .eq('id', paymentId)
-  //       .select()
-  //       .single();
-
-  //     if (updateError) throw updateError;
-
-  //     // Step 3: If APPROVED → Update user.paid = true
-  //     if (newStatus === 'approved') {
-  //       const { error: userError } = await supabase
-  //         .from('users')
-  //         .update({
-  //           paid: true,
-  //           updated_at: new Date().toISOString(),
-  //         })
-  //         .eq('id', payment.user_id);
-
-  //       if (userError) {
-  //         console.error('Failed to activate user:', userError);
-  //         showLiveAlert('Payment approved, but failed to activate user account!', 'danger');
-  //         return;
-  //       }
-
-  //       console.log('User activated:', payment.user_id);
-  //       showLiveAlert('Payment approved & user account activated!', 'success');
-  //     }
-  //     else if (newStatus === 'rejected') {
-  //       showLiveAlert('Payment rejected.', 'info');
-  //     }
-
-  //     // Refresh the list
-  //     fetchPayments();
-
-  //   } catch (error) {
-  //     console.error('Error in updatePaymentStatus:', error);
-  //     showLiveAlert('Failed: ' + error.message, 'danger');
-  //   }
-  // };
 
   const updatePaymentStatus = async (paymentId, newStatus) => {
     try {
