@@ -19,6 +19,7 @@ import systemConfig from './routes/systemSettingsRoutes.js';
 import withdrawalRoutes from './routes/withdrawal.js';
 import estateRoutes from './routes/estate.js';
 import cryptoRoutes from './routes/crypto.js';
+import routerforAdminCryptoUdate from './routes/cryptoPaymentRoutes.js';
 
 // Simple CORS setup
 app.use(cors({
@@ -44,7 +45,7 @@ app.use('/api/setting', systemConfig);
 app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/estate', estateRoutes);
 app.use('/api/crypto', cryptoRoutes);
-
+app.use('/api/admin/crypto-payment', routerforAdminCryptoUdate);
 const PORT = process.env.PORT || 5000;
 
 app.get('/', (req, res) => {

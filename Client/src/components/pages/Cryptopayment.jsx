@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../../supabase';
 import { useAuth } from '../../context/AuthProvider';
-import { v4 as uuidv4 } from "uuid";
 
 
 const Cryptopayment = () => {
-  const { user } = useAuth();
+  const { register } = useAuth();
+  const { state } = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -16,6 +16,10 @@ const Cryptopayment = () => {
   const [copied, setCopied] = useState(false);
   const [paymentProof, setPaymentProof] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
+  const userData = state?.userData;
+
+  console.log('i just passed', userData)
+
 
   // Live Alert Function
   const showLiveAlert = (message, type = 'success') => {
@@ -111,51 +115,141 @@ const Cryptopayment = () => {
 
 
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!paymentProof) {
+  //     showLiveAlert('Upload proof', 'warning');
+  //     return;
+  //   }
+
+  //   try {
+  //     setSubmitting(true);
+
+  //     // 1. Upload to crypto_payment bucket
+  //     const fileExt = paymentProof.name.split('.').pop();
+  //     const fileName = `${Date.now()}.${fileExt}`;
+  //     const filePath = `pending/${Date.now()}-${fileName}`;
+
+  //     const { error: uploadError } = await supabase.storage
+  //       .from('crypto_payment') // ← YOUR BUCKET
+  //       .upload(filePath, paymentProof, { upsert: false });
+
+  //     if (uploadError) throw uploadError;
+
+  //     // 2. Get public URL
+  //     const { data: urlData } = supabase.storage
+  //       .from('crypto_payment')
+  //       .getPublicUrl(filePath);
+
+  //     // 3. Save to crypto_payments
+  //     const { error: insertError } = await supabase
+  //       .from('crypto_payments')
+  //       .insert({
+  //         user_id: uuidv4(),
+  //         wallet_name: walletName,
+  //         wallet_address: walletAddress,
+  //         payment_proof_url: urlData.publicUrl,
+  //         status: 'pending',
+  //         created_at: new Date().toISOString(),
+  //       });
+
+  //     if (insertError) throw insertError;
+
+  //     showLiveAlert('Proof submitted! We’ll verify in 24h.', 'success');
+  //     setTimeout(() => navigate('/'), 2000);
+  //   } catch (err) {
+  //     console.error('Submit error:', err);
+  //     showLiveAlert('Failed. Try again.', 'danger');
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!paymentProof) {
-      showLiveAlert('Upload proof', 'warning');
+      showLiveAlert('Please upload payment proof', 'warning');
+      return;
+    }
+
+    if (!userData) {
+      showLiveAlert('User data missing. Please go back and try again.', 'danger');
       return;
     }
 
     try {
       setSubmitting(true);
 
-      // 1. Upload to crypto_payment bucket
+      // STEP 1: Register the user with paid = false (pending)
+    // Make sure useAuth is providing register function
+      const registrationResponse = await register({
+        fullName: userData.fullName,
+        email: userData.email,
+        password: userData.password,
+        phoneNumber: userData.phoneNumber,
+        country: userData.country,
+        paymentMethod: 'crypto',
+        agreedToTerms: userData.agreedToTerms,
+        referralCode: userData.referralCode || null,
+        paid: false, // Important: pending payment
+        role: 'user',
+      });
+      console.log(registrationResponse)
+
+      const newUserId = registrationResponse?.user?.id;
+
+      if (!newUserId) {
+        throw new Error('Failed to create user account');
+      }
+
+      // STEP 2: Upload payment proof
       const fileExt = paymentProof.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `pending/${Date.now()}-${fileName}`;
+      const fileName = `${Date.now()}-${newUserId}.${fileExt}`;
+      const filePath = `pending/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('crypto_payment') // ← YOUR BUCKET
+        .from('crypto_payment')
         .upload(filePath, paymentProof, { upsert: false });
 
       if (uploadError) throw uploadError;
 
-      // 2. Get public URL
       const { data: urlData } = supabase.storage
         .from('crypto_payment')
         .getPublicUrl(filePath);
 
-      // 3. Save to crypto_payments
+      // STEP 3: Save receipt with REAL user_id
       const { error: insertError } = await supabase
         .from('crypto_payments')
         .insert({
-          user_id: uuidv4(),
+          user_id: newUserId,                    // ← NOW USING REAL USER ID
           wallet_name: walletName,
           wallet_address: walletAddress,
+          // amount: walletAmount,
           payment_proof_url: urlData.publicUrl,
           status: 'pending',
           created_at: new Date().toISOString(),
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw new Error('Failed to save payment proof');
+      }
 
-      showLiveAlert('Proof submitted! We’ll verify in 24h.', 'success');
-      setTimeout(() => navigate('/dashboard'), 2000);
+      // Success!
+      showLiveAlert('Payment proof submitted successfully! Awaiting approval (24-48 hrs)', 'success');
+
+      // Redirect after 3 seconds
+      setTimeout(() => {
+        navigate('/login', {
+          replace: true,
+          state: { message: 'Registration complete! Your crypto payment is under review.' }
+        });
+      }, 3000);
+
     } catch (err) {
-      console.error('Submit error:', err);
-      showLiveAlert('Failed. Try again.', 'danger');
+      console.error('Crypto payment submission failed:', err);
+      showLiveAlert(err.message || 'Submission failed. Please try again.', 'danger');
     } finally {
       setSubmitting(false);
     }
@@ -248,7 +342,7 @@ const Cryptopayment = () => {
               {/* Wallet Amount */}
               <div className="mb-3 d-flex justify-content-center ">
                 <span className="badge bg-success fs-6" >
-                  Amount: $ {parseFloat(walletAmount || 0).toFixed(2)} 
+                  Amount: $ {parseFloat(walletAmount || 0).toFixed(2)}
                 </span>
               </div>
 
