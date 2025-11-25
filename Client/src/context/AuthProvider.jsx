@@ -159,27 +159,25 @@ export const AuthProvider = ({ children }) => {
     if (error) throw error;
     if (!data?.user) throw new Error('Login failed: No user returned');
 
-    // Step 2: Check the `paid` and `is_approved` status in your custom `users` table
-    const { data: profileData, error: profileError } = await supabase
-      .from('users')
-      .select('paid, is_approved')
-      .eq('id', data.user.id)
-      .single();
+      // Step 2: Check the `paid` status in your custom `users` table
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .select('paid')
+        .eq('id', data.user.id)
+        .single();
 
-    if (profileError) {
-      console.error('Failed to fetch user payment status:', profileError);
-      throw new Error('Login error. Please try again later.');
-    }
+      if (profileError) {
+        console.error('Failed to fetch user payment status:', profileError);
+        throw new Error('Login error. Please try again later.');
+      }
 
-    if (profileData?.paid === false || profileData?.is_approved === false) {
-      // Block login + force logout to be safe
-      await supabase.auth.signOut();
-      throw new Error(
-        'Your account is pending payment approval. You cannot log in yet. Please wait 24-48 hours after submitting your crypto payment proof.'
-      );
-    }
-
-    // Step 3: Only if paid === true → allow login
+      if (profileData?.paid === false) {
+        // Block login + force logout to be safe
+        await supabase.auth.signOut();
+        throw new Error(
+          'Your account is pending payment approval. You cannot log in yet. Please wait 24-48 hours after submitting your crypto payment proof.'
+        );
+      }    // Step 3: Only if paid === true → allow login
     setUser(data.user);
     await fetchProfile(data.user.id);
     return data;

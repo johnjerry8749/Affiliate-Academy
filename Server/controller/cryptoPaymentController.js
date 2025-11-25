@@ -43,7 +43,6 @@ export const updateCryptoPaymentStatus = async (req, res) => {
         .from('users')
         .update({
           paid: true,
-          is_approved: true,
           updated_at: new Date().toISOString(),
         })
         .eq('id', payment.user_id);
@@ -85,10 +84,11 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             subject: 'Payment Approved - Welcome to Affiliate Academy! 🎉',
             message: `Great news! Your crypto payment has been verified and approved by our admin team. Your account is now fully activated and you can login immediately. 
             
-            ✅ Account Status: APPROVED & ACTIVE
+            ✅ Payment Status: APPROVED
+            ✅ Account Status: ACTIVE
             ✅ Login Access: ENABLED
             
-            You can now log in to your dashboard at https://your-site.com/login and start exploring our affiliate programs. We're excited to have you on board and look forward to helping you succeed in your affiliate marketing journey!
+            You can now log in to your dashboard and start exploring our affiliate programs. We're excited to have you on board and look forward to helping you succeed in your affiliate marketing journey!
             
             If you have any questions, feel free to reach out to our support team.`,
             name: newUserData.full_name
