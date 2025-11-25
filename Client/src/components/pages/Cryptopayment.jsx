@@ -287,11 +287,14 @@ const Cryptopayment = () => {
       // Clear sessionStorage
       sessionStorage.removeItem('cryptoRegistrationData');
 
+      // Sign out the user since they cannot login until approved
+      await supabase.auth.signOut();
+
       // Redirect after 3 seconds
       setTimeout(() => {
         navigate('/login', {
           replace: true,
-          state: { message: 'Registration complete! Your crypto payment is under review.' }
+          state: { message: 'Registration complete! Your crypto payment is under review. You will receive an email when approved.' }
         });
       }, 3000);
 

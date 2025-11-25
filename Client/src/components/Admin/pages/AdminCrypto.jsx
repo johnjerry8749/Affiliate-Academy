@@ -521,7 +521,6 @@ const AdminCrypto = () => {
                                 <button
                                   className="btn btn-sm btn-success"
                                   onClick={() => updatePaymentStatus(payment.id, 'approved')}
-                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-check-circle me-1"></i>
                                   Approve
@@ -529,7 +528,6 @@ const AdminCrypto = () => {
                                 <button
                                   className="btn btn-sm btn-danger"
                                   onClick={() => updatePaymentStatus(payment.id, 'rejected')}
-                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-x-circle me-1"></i>
                                   Reject
@@ -602,7 +600,6 @@ const AdminCrypto = () => {
                         <button
                           className="btn btn-success btn-sm flex-fill"
                           onClick={() => updatePaymentStatus(payment.id, 'approved')}
-                          disabled={payment.status === 'approved' || payment.status === 'rejected'}
                         >
                           <i className="bi bi-check-circle me-1"></i>
                           Approve
@@ -610,7 +607,6 @@ const AdminCrypto = () => {
                         <button
                           className="btn btn-danger btn-sm flex-fill"
                           onClick={() => updatePaymentStatus(payment.id, 'rejected')}
-                          disabled={payment.status === 'approved' || payment.status === 'rejected'}
                         >
                           <i className="bi bi-x-circle me-1"></i>
                           Reject

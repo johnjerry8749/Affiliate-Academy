@@ -25,4 +25,7 @@ mailRouter.get('/test', async (req, res) => {
 // Endpoint for admin to send emails
 mailRouter.post('/admin/send-mail', sendMail);
 
+// Public endpoint for sending emails (used by crypto payment notifications)
+mailRouter.post('/send', sendMail);
+
 export default mailRouter;
