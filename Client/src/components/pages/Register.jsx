@@ -133,7 +133,7 @@ const Register = () => {
       console.log('🔄 Verifying payment with backend...');
       const verifyRes = await fetch(
         `${backendURL}/api/payment/verify/${referenceObj.reference}`,
-        {
+        { 
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -376,23 +376,28 @@ const Register = () => {
               {formData.paymentMethod === 'crypto' && (
                 <div className="crypto-placeholder">
                   <p>Crypto payment selected</p>
-                  <button
-                    className="register-button"
-                    onClick={() => navigate('/crypto-payment',
-                      {
-                        state: {
-                          userData: {
-                            ...formData 
-                          },
-                        },
+                  <button 
+                    className="register-button" 
+                    onClick={() => navigate('/crypto-payment', {
+                      state: {
+                        registrationData: {
+                          fullName: formData.fullName,
+                          email: formData.email,
+                          password: formData.password,
+                          phoneNumber: formData.phoneNumber,
+                          country: formData.country,
+                          paymentMethod: 'crypto',
+                          paymentRef,
+                          referralCode: referralCode || null
+                        }
                       }
-                    )}
+                    })}
                     type="button"
                   >
                     Proceed to Crypto Payment <i className="bi bi-arrow-right"></i>
                   </button>
-                  <button
-                    className="btn btn-secondary mt-3"
+                  <button 
+                    className="btn btn-secondary mt-3" 
                     onClick={() => setShowPaymentScreen(false)}
                     type="button"
                   >
