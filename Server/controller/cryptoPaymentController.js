@@ -6,7 +6,7 @@ import crypto from 'crypto';
 export const updateCryptoPaymentStatus = async (req, res) => {
   const { payment_id, status } = req.body;
 
-  if (!payment_id || !['approved', 'rejected'].includes(status)) {
+  if (!payment_id || !['approved', 'rejected', 'pending'].includes(status)) {
     return res.status(400).json({ error: 'Invalid payment_id or status' });
   }
 
@@ -20,6 +20,36 @@ export const updateCryptoPaymentStatus = async (req, res) => {
 
     if (fetchError || !payment) {
       return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    // If resetting to pending (silent, no emails)
+    if (status === 'pending') {
+      // Update crypto_payments back to pending
+      const { error: updateError } = await supabase
+        .from('crypto_payments')
+        .update({
+          status: 'pending',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', payment_id);
+
+      if (updateError) throw updateError;
+
+      // Deactivate user account (reset paid to false)
+      const { error: userError } = await supabase
+        .from('users')
+        .update({
+          paid: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', payment.user_id);
+
+      if (userError) throw userError;
+
+      return res.json({
+        success: true,
+        message: 'Payment reset to pending. User account deactivated.',
+      });
     }
 
     if (payment.status === status) {
@@ -49,28 +79,57 @@ export const updateCryptoPaymentStatus = async (req, res) => {
 
       if (userError) throw userError;
 
-      // 4. Fetch registration fee from system_settings
+      // 4. Fetch wallet_amount (USD) from system_settings and get user's currency
       const { data: systemSettings, error: settingsError } = await supabase
         .from('system_settings')
-        .select('registration_fee_amount')
+        .select('wallet_amount')
         .single();
 
       if (settingsError) {
         console.error('Error fetching system settings:', settingsError);
       }
 
-      const registrationFee = systemSettings?.registration_fee_amount || 5000;
-      console.log('Registration fee from settings:', registrationFee);
+      const walletAmountUSD = systemSettings?.wallet_amount || 50; // Default $50
+      console.log('Crypto payment amount (USD):', walletAmountUSD);
 
-      // 5. Fetch new user details and referrer_id
+      // 5. Fetch new user details, referrer_id, and currency
       const { data: newUserData, error: newUserError } = await supabase
         .from('users')
-        .select('full_name, email, referrer_id')
+        .select('full_name, email, referrer_id, currency')
         .eq('id', payment.user_id)
         .single();
 
       if (newUserError) {
         console.error('Error fetching new user:', newUserError);
+      }
+
+      const userCurrency = newUserData?.currency || 'NGN';
+      console.log('User currency:', userCurrency);
+
+      // 6. Convert USD to user's currency using live exchange rates
+      let registrationFee = walletAmountUSD; // Default to USD if conversion fails
+      let exchangeRate = 1;
+
+      if (userCurrency !== 'USD') {
+        try {
+          // Fetch live exchange rate from exchangerate-api.com (free tier)
+          const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+          const rateData = await response.json();
+          
+          if (rateData && rateData.rates && rateData.rates[userCurrency]) {
+            exchangeRate = rateData.rates[userCurrency];
+            registrationFee = walletAmountUSD * exchangeRate;
+            console.log(` Exchange rate USD to ${userCurrency}: ${exchangeRate}`);
+            console.log(` Converted amount: ${userCurrency} ${registrationFee.toFixed(2)}`);
+          } else {
+            console.log(`  Currency ${userCurrency} not found, using USD value`);
+          }
+        } catch (conversionError) {
+          console.error('Currency conversion failed:', conversionError.message);
+          console.log(' Using USD value without conversion');
+        }
+      } else {
+        console.log('User currency is USD, no conversion needed');
       }
 
       const referrerId = newUserData?.referrer_id;
@@ -93,7 +152,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             If you have any questions, feel free to reach out to our support team.`,
             name: newUserData.full_name
           });
-          console.log('✅ Approval email sent to user:', newUserData.email);
+          console.log(' Approval email sent to user:', newUserData.email);
         }
       } catch (emailError) {
         console.error('Failed to send approval email:', emailError);
@@ -103,10 +162,10 @@ export const updateCryptoPaymentStatus = async (req, res) => {
       if (referrerId) {
         console.log('Processing referral commission for referrer:', referrerId);
 
-        // Verify referrer exists and get email
+        // Verify referrer exists and get email and currency
         const { data: referrerExists, error: referrerCheckError } = await supabase
           .from('users')
-          .select('id, full_name, email')
+          .select('id, full_name, email, currency')
           .eq('id', referrerId)
           .single();
 
@@ -114,6 +173,19 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           console.error('Referrer not found:', referrerId, referrerCheckError);
         } else {
           console.log('Referrer found:', referrerExists.full_name, referrerExists.email);
+
+          // Get referrer's currency for display
+          const referrerCurrency = referrerExists.currency || 'NGN';
+          const currencySymbols = {
+            'USD': '$',
+            'NGN': '₦',
+            'EUR': '€',
+            'GBP': '£',
+            'GHS': '₵',
+            'KES': 'KSh',
+            'ZAR': 'R'
+          };
+          const currencySymbol = currencySymbols[referrerCurrency] || referrerCurrency;
 
           // Split: 50% company, 50% referrer
           const companyShare = registrationFee * 0.5;
@@ -124,6 +196,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           const balanceAmount = registrationFee * 0.4;     // 40% of total
 
           console.log('Commission breakdown:', {
+            currency: userCurrency,
             total: registrationFee,
             companyShare,
             referrerTotal,
@@ -236,13 +309,13 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             console.log('✅ Commission recorded in referral_commissions');
           }
 
-          // 11. Send referral success email to referrer
+          // 11. Send referral success email to referrer with their currency
           try {
             if (referrerExists.email) {
               await sendEmailDirect({
                 to: referrerExists.email,
                 subject: 'New Referral Commission Earned! 💰',
-                message: `Great news! ${newUserData.full_name} just registered using your referral link via crypto payment. You've earned ₦${referrerTotal.toLocaleString()} in commissions! Your commission breakdown: ₦${commissionAmount.toLocaleString()} commission + ₦${balanceAmount.toLocaleString()} balance. The amount has been added to your account and is available for withdrawal. Keep sharing your referral link to earn more!`,
+                message: `Great news! ${newUserData.full_name} just registered using your referral link via crypto payment. You've earned ${currencySymbol}${referrerTotal.toLocaleString()} in commissions! Your commission breakdown: ${currencySymbol}${commissionAmount.toLocaleString()} commission + ${currencySymbol}${balanceAmount.toLocaleString()} balance. The amount has been added to your account (in ${userCurrency}) and is available for withdrawal. Keep sharing your referral link to earn more!`,
                 name: referrerExists.full_name
               });
               console.log('✅ Referral notification email sent to:', referrerExists.email);
@@ -251,10 +324,10 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             console.error('❌ Failed to send referral email:', emailError.message);
           }
 
-          console.log(`Company receives: ₦${companyShare}`);
+          console.log(`Company receives: ${userCurrency} ${companyShare}`);
         }
       } else {
-        console.log('No referrer - Company gets 100%:', registrationFee);
+        console.log('No referrer - Company gets 100%:', userCurrency, registrationFee);
         
         // UPDATE COMPANY WALLET - Store 100% when no referral
         try {

@@ -532,6 +532,16 @@ const AdminCrypto = () => {
                                   <i className="bi bi-x-circle me-1"></i>
                                   Reject
                                 </button>
+                                {(payment.status === 'approved' || payment.status === 'rejected') && (
+                                  <button
+                                    className="btn btn-sm btn-warning"
+                                    onClick={() => updatePaymentStatus(payment.id, 'pending')}
+                                    title="Reset to pending status"
+                                  >
+                                    <i className="bi bi-arrow-counterclockwise me-1"></i>
+                                    Reset
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -611,6 +621,16 @@ const AdminCrypto = () => {
                           <i className="bi bi-x-circle me-1"></i>
                           Reject
                         </button>
+                        {(payment.status === 'approved' || payment.status === 'rejected') && (
+                          <button
+                            className="btn btn-warning btn-sm flex-fill"
+                            onClick={() => updatePaymentStatus(payment.id, 'pending')}
+                            title="Reset to pending status"
+                          >
+                            <i className="bi bi-arrow-counterclockwise me-1"></i>
+                            Reset
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

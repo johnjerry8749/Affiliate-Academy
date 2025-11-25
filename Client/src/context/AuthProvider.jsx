@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     if (authError) throw authError;
     if (!authData.user) throw new Error('No user');
 
-    // Persist user profile in `users` table including `paid` and `role`
+    // Persist user profile in `users` table including `paid`, `role`, and `referrer_id`
     await supabase.from('users').insert({
       id: authData.user.id,
       full_name: fullName,
@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }) => {
       agreed_to_terms: agreedToTerms,
       role,
       paid: paid,
+      referrer_id: referralCode || null, // Save referrer_id for commission processing
     });
 
     await supabase.from('user_balances').insert({
