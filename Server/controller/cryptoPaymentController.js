@@ -2,7 +2,29 @@
 import { supabase } from '../utils/supabaseClient.js';
 import { sendEmailDirect } from '../services/mailservices.js';
 import crypto from 'crypto';
-import fetch from 'node-fetch';
+
+// Helper function to get exchange rate
+async function getExchangeRate(fromCurrency, toCurrency) {
+  try {
+    const url = `https://v6.exchangerate-api.com/v6/${process.env.EXCHANGE_RATE_API_KEY || '9da18f7e11225a0dc7fb8f9c'}/pair/${fromCurrency}/${toCurrency}`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.result !== 'success') {
+      throw new Error(`API error: ${data['error-type']}`);
+    }
+    
+    return data.conversion_rate;
+  } catch (error) {
+    console.error(`❌ Failed to get ${fromCurrency} → ${toCurrency} rate:`, error.message);
+    throw error;
+  }
+}
 
 export const updateCryptoPaymentStatus = async (req, res) => {
   const { payment_id, status } = req.body;
@@ -195,19 +217,12 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           let ngnExchangeRate = 1;
           
           try {
-            const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
-            const rateData = await response.json();
-            
-            if (rateData && rateData.rates && rateData.rates['NGN']) {
-              ngnExchangeRate = rateData.rates['NGN'];
-              companyShareNGN = companyShareUSD * ngnExchangeRate;
-              console.log(`✅ Company share converted: $${companyShareUSD.toFixed(2)} USD = ₦${companyShareNGN.toFixed(2)} NGN (rate: ${ngnExchangeRate})`);
-            } else {
-              console.log('⚠️ NGN rate not found, using USD value');
-            }
+            ngnExchangeRate = await getExchangeRate('USD', 'NGN');
+            companyShareNGN = companyShareUSD * ngnExchangeRate;
+            console.log(`✅ Company share converted: $${companyShareUSD.toFixed(2)} USD = ₦${companyShareNGN.toFixed(2)} NGN (rate: ${ngnExchangeRate})`);
           } catch (conversionError) {
             console.error('❌ Company NGN conversion failed:', conversionError.message);
-            console.log('⚠️ Company share staying in USD');
+            console.log('⚠️ Company share staying in USD:', companyShareUSD);
           }
 
           // Convert referrer's share to their currency
@@ -216,18 +231,10 @@ export const updateCryptoPaymentStatus = async (req, res) => {
 
           if (referrerCurrency !== 'USD') {
             try {
-              const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
-              const rateData = await response.json();
-              
-              if (rateData && rateData.rates && rateData.rates[referrerCurrency]) {
-                exchangeRate = rateData.rates[referrerCurrency];
-                referrerTotalConverted = referrerTotalUSD * exchangeRate;
-                console.log(`✅ Exchange rate USD to ${referrerCurrency}: ${exchangeRate}`);
-                console.log(`✅ Referrer share converted: $${referrerTotalUSD.toFixed(2)} USD = ${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
-              } else {
-                console.log(`⚠️ Currency ${referrerCurrency} not found, using USD value`);
-                referrerCurrency = 'USD';
-              }
+              exchangeRate = await getExchangeRate('USD', referrerCurrency);
+              referrerTotalConverted = referrerTotalUSD * exchangeRate;
+              console.log(`✅ Exchange rate USD to ${referrerCurrency}: ${exchangeRate}`);
+              console.log(`✅ Referrer share converted: $${referrerTotalUSD.toFixed(2)} USD = ${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
             } catch (conversionError) {
               console.error('❌ Currency conversion failed:', conversionError.message);
               console.log('⚠️ Using USD value without conversion');
@@ -390,20 +397,13 @@ export const updateCryptoPaymentStatus = async (req, res) => {
         let companyAmountNGN = walletAmountUSD;
         
         try {
-          const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
-          const rateData = await response.json();
-          
-          if (rateData && rateData.rates && rateData.rates['NGN']) {
-            const exchangeRate = rateData.rates['NGN'];
-            companyAmountNGN = walletAmountUSD * exchangeRate;
-            console.log(`✅ Exchange rate USD to NGN: ${exchangeRate}`);
-            console.log(`✅ Company gets: $${walletAmountUSD.toFixed(2)} USD = ₦${companyAmountNGN.toFixed(2)} NGN`);
-          } else {
-            console.log('⚠️ NGN rate not found, using USD value');
-          }
+          const exchangeRate = await getExchangeRate('USD', 'NGN');
+          companyAmountNGN = walletAmountUSD * exchangeRate;
+          console.log(`✅ Exchange rate USD to NGN: ${exchangeRate}`);
+          console.log(`✅ Company gets: $${walletAmountUSD.toFixed(2)} USD = ₦${companyAmountNGN.toFixed(2)} NGN`);
         } catch (conversionError) {
           console.error('❌ Currency conversion failed:', conversionError.message);
-          console.log('⚠️ Company amount staying in USD');
+          console.log('⚠️ Company amount staying in USD:', walletAmountUSD);
         }
         
         // UPDATE COMPANY WALLET - Store 100% in NGN when no referral
