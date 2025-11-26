@@ -24,7 +24,7 @@ import adminReset from './routes/adminResetpassword.js';
 
 // Simple CORS setup
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://affiliate-academy-e8o9.vercel.app'], // Your specific frontend URLs
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://my-affiliateacademy.com'], // Your specific frontend URLs
   credentials: true
 }));
 
@@ -61,7 +61,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`CORS enabled for: http://localhost:5173 and https://affiliate-academy-e8o9.vercel.app`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`CORS enabled for: http://localhost:5173 and https://affiliate-academy-e8o9.vercel.app`);
+  });
+}
+
+// Export for Vercel
+export default app;

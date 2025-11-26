@@ -142,7 +142,7 @@ const Footer = () => {
               </li>
               <li className="contact-item">
                 <i className="bi bi-geo-alt-fill text-success me-2"></i>
-                <span className="text-grey">Nigeria</span>
+                <span className="text-grey">Usa</span>
               </li>
             </ul>
 
