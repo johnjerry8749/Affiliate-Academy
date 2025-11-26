@@ -20,6 +20,7 @@ import systemConfig from './routes/systemSettingsRoutes.js';
 import withdrawalRoutes from './routes/withdrawal.js';
 import estateRoutes from './routes/estate.js';
 import routerforAdminCryptoUdate from './routes/cryptoPaymentRoutes.js';
+import adminReset from './routes/adminResetpassword.js';
 
 // Simple CORS setup
 app.use(cors({
@@ -46,11 +47,12 @@ app.use('/api/setting', systemConfig);
 app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/estate', estateRoutes);
 app.use('/api/admin/crypto-payment', routerforAdminCryptoUdate);
+app.use('/', adminReset)
 const PORT = process.env.PORT || 5000;
 
-app.get('/', (req, res) => {
-  res.send('Server is running');
-});
+// app.get('/', (req, res) => {
+//   res.send('Server is running');
+// });
 
 app.get('/health', (req, res) => {
   res.status(200).json({ 
