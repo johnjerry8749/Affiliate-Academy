@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './AdminLogin.css';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
 
 const AdminLogin = () => {
@@ -98,9 +98,9 @@ const AdminLogin = () => {
                   <span className="admin-checkmark"></span>
                   Remember me
                 </label>
-                <a href="#forgot" className="admin-forgot-link">
+                <Link to="/forgot-passwordAdmin" className="admin-forgot-link">
                   Forgot Password?
-                </a>
+                </Link>
               </div>
 
               <button
