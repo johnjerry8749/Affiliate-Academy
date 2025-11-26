@@ -364,11 +364,9 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           }
 
           console.log(`Company receives: ${referrerCurrency} ${companyShareConverted.toFixed(2)}`);
-        }
-      }
-      
-      // If no referrer or referrer not found - Company gets 100%
-      if (!shouldProcessReferral) {
+        } // End of shouldProcessReferral block
+      } else if (!shouldProcessReferral) {
+        // If no referrer or referrer not found - Company gets 100%
         console.log('💰 No valid referrer - Company gets 100%');
         
         // Convert $50 USD to user currency for company wallet
