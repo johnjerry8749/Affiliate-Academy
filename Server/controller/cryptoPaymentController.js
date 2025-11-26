@@ -6,22 +6,28 @@ import crypto from 'crypto';
 // Helper function to get exchange rate
 async function getExchangeRate(fromCurrency, toCurrency) {
   try {
+    console.log(`Fetching exchange rate: ${fromCurrency} to ${toCurrency}`);
     const url = `https://v6.exchangerate-api.com/v6/${process.env.EXCHANGE_RATE_API_KEY || '9da18f7e11225a0dc7fb8f9c'}/pair/${fromCurrency}/${toCurrency}`;
+    console.log(`API URL: ${url}`);
+    
     const response = await fetch(url);
+    console.log(`Response status: ${response.status}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
+    console.log(`API Response:`, JSON.stringify(data).substring(0, 200));
     
     if (data.result !== 'success') {
       throw new Error(`API error: ${data['error-type']}`);
     }
     
+    console.log(`Exchange rate ${fromCurrency} to ${toCurrency}: ${data.conversion_rate}`);
     return data.conversion_rate;
   } catch (error) {
-    console.error(`❌ Failed to get ${fromCurrency} → ${toCurrency} rate:`, error.message);
+    console.error(`Failed to get ${fromCurrency} to ${toCurrency} rate:`, error.message);
     throw error;
   }
 }
@@ -135,16 +141,16 @@ export const updateCryptoPaymentStatus = async (req, res) => {
 
       const userCurrency = newUserData?.currency || 'NGN';
       const referrerId = newUserData?.referrer_id;
-      console.log('✅ User data fetched successfully');
+      console.log('User data fetched successfully');
       console.log('   User email:', newUserData.email);
       console.log('   User currency:', userCurrency);
       console.log('   Referrer ID:', referrerId || 'NONE');
       
       // Log if referrer exists
       if (!referrerId) {
-        console.log('⚠️ No referrer_id found - Company will get 100%');
+        console.log('WARNING: No referrer_id found - Company will get 100%');
       } else {
-        console.log('✅ Referrer ID found - Will process 50/50 split');
+        console.log('Referrer ID found - Will process 50/50 split');
       }
 
       // 6. Send welcome email to new user
@@ -175,7 +181,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
       let referrerExists = null;
       
       if (referrerId) {
-        console.log('✅ Processing referral commission for referrer:', referrerId);
+        console.log('Processing referral commission for referrer:', referrerId);
 
         // Verify referrer exists and get email and currency
         const { data: referrerData, error: referrerCheckError } = await supabase
@@ -185,13 +191,13 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           .single();
 
         if (referrerCheckError || !referrerData) {
-          console.error('❌ Referrer not found in database!');
+          console.error('ERROR: Referrer not found in database!');
           console.error('   Referrer ID:', referrerId);
           console.error('   Error:', referrerCheckError);
-          console.log('⚠️ Company will get 100% instead');
+          console.log('WARNING: Company will get 100% instead');
           shouldProcessReferral = false;
         } else {
-          console.log('✅ Referrer verified:', referrerData.full_name, referrerData.email);
+          console.log('Referrer verified:', referrerData.full_name, referrerData.email);
           referrerExists = referrerData;
           shouldProcessReferral = true;
         }
@@ -206,7 +212,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           const companyShareUSD = walletAmountUSD * 0.5;
           const referrerTotalUSD = walletAmountUSD * 0.5;
 
-          console.log('💵 USD Split:', {
+          console.log('USD Split:', {
             walletAmountUSD,
             companyShareUSD: `$${companyShareUSD.toFixed(2)} (will convert to NGN)`,
             referrerTotalUSD: `$${referrerTotalUSD.toFixed(2)} (will convert to ${referrerCurrency})`
@@ -219,10 +225,10 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           try {
             ngnExchangeRate = await getExchangeRate('USD', 'NGN');
             companyShareNGN = companyShareUSD * ngnExchangeRate;
-            console.log(`✅ Company share converted: $${companyShareUSD.toFixed(2)} USD = ₦${companyShareNGN.toFixed(2)} NGN (rate: ${ngnExchangeRate})`);
+            console.log(`Company share converted: $${companyShareUSD.toFixed(2)} USD = NGN ${companyShareNGN.toFixed(2)} (rate: ${ngnExchangeRate})`);
           } catch (conversionError) {
             console.error('❌ Company NGN conversion failed:', conversionError.message);
-            console.log('⚠️ Company share staying in USD:', companyShareUSD);
+            console.log('WARNING: Company share staying in USD:', companyShareUSD);
           }
 
           // Convert referrer's share to their currency
@@ -233,15 +239,15 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             try {
               exchangeRate = await getExchangeRate('USD', referrerCurrency);
               referrerTotalConverted = referrerTotalUSD * exchangeRate;
-              console.log(`✅ Exchange rate USD to ${referrerCurrency}: ${exchangeRate}`);
-              console.log(`✅ Referrer share converted: $${referrerTotalUSD.toFixed(2)} USD = ${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
+              console.log(`Exchange rate USD to ${referrerCurrency}: ${exchangeRate}`);
+              console.log(`Referrer share converted: $${referrerTotalUSD.toFixed(2)} USD = ${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
             } catch (conversionError) {
               console.error('❌ Currency conversion failed:', conversionError.message);
-              console.log('⚠️ Using USD value without conversion');
+              console.log('WARNING: Using USD value without conversion');
               referrerCurrency = 'USD';
             }
           } else {
-            console.log('✅ Referrer currency is USD, no conversion needed');
+            console.log('Referrer currency is USD, no conversion needed');
           }
 
           // Get currency symbol for display
@@ -260,7 +266,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           const commissionAmount = referrerTotalConverted * 0.2;  // 20% of referrer's share
           const balanceAmount = referrerTotalConverted * 0.8;     // 80% of referrer's share
 
-          console.log('📊 Commission breakdown:', {
+          console.log('Commission breakdown:', {
             companyShare: `₦${companyShareNGN.toFixed(2)} NGN`,
             referrerCurrency: referrerCurrency,
             referrerTotal: `${referrerCurrencySymbol}${referrerTotalConverted.toFixed(2)}`,
@@ -291,7 +297,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
               if (walletUpdateError) {
                 console.error('❌ Error updating company wallet:', walletUpdateError);
               } else {
-                console.log(`✅ Company wallet updated: +₦${companyShareNGN.toFixed(2)} NGN (Total: ₦${newTotalEarnings.toFixed(2)} NGN)`);
+                console.log(`Company wallet updated: +NGN ${companyShareNGN.toFixed(2)} (Total: NGN ${newTotalEarnings.toFixed(2)})`);
               }
             }
           } catch (companyWalletError) {
@@ -325,7 +331,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             if (updateError) {
               console.error('❌ Error updating referrer balance:', updateError);
             } else {
-              console.log(`✅ Referrer balance updated: +${referrerCurrencySymbol}${referrerTotalConverted.toFixed(2)} (Total: ${referrerCurrencySymbol}${newAvailableBalance.toFixed(2)})`);
+              console.log(`Referrer balance updated: +${referrerCurrencySymbol}${referrerTotalConverted.toFixed(2)} (Total: ${referrerCurrencySymbol}${newAvailableBalance.toFixed(2)})`);
             }
           } else {
             // User balance doesn't exist - CREATE IT
@@ -343,7 +349,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             if (insertError) {
               console.error('❌ Failed to create balance for referrer:', insertError);
             } else {
-              console.log(`✅ Balance created for referrer: ${referrerCurrencySymbol}${referrerTotalConverted.toFixed(2)}`);
+              console.log(`Balance created for referrer: ${referrerCurrencySymbol}${referrerTotalConverted.toFixed(2)}`);
             }
           }
 
@@ -369,7 +375,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           if (commissionError) {
             console.error('❌ Error recording commission:', commissionError);
           } else {
-            console.log('✅ Commission recorded in referral_commissions');
+            console.log('Commission recorded in referral_commissions');
           }
 
           // 11. Send referral success email to referrer with their currency
@@ -381,17 +387,17 @@ export const updateCryptoPaymentStatus = async (req, res) => {
                 message: `Great news! ${newUserData.full_name} just registered using your referral link via crypto payment. You've earned ${referrerCurrencySymbol}${referrerTotalConverted.toLocaleString()} in commissions! Your commission breakdown: ${referrerCurrencySymbol}${commissionAmount.toLocaleString()} commission + ${referrerCurrencySymbol}${balanceAmount.toLocaleString()} balance. The amount has been added to your account (in ${referrerCurrency}) and is available for withdrawal. Keep sharing your referral link to earn more!`,
                 name: referrerExists.full_name
               });
-              console.log('✅ Referral notification email sent to:', referrerExists.email);
+              console.log('Referral notification email sent to:', referrerExists.email);
             }
           } catch (emailError) {
             console.error('❌ Failed to send referral email:', emailError.message);
           }
 
-          console.log(`✅ Distribution complete: Company $${companyShareUSD.toFixed(2)} USD | Referrer ${referrerCurrencySymbol}${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
+          console.log(`Distribution complete: Company $${companyShareUSD.toFixed(2)} USD | Referrer ${referrerCurrencySymbol}${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
         } // End of shouldProcessReferral block
       } else if (!shouldProcessReferral) {
         // If no referrer or referrer not found - Company gets 100%
-        console.log('💰 No valid referrer - Company gets 100%');
+        console.log('No valid referrer - Company gets 100%');
         
         // Convert full amount to NGN for company wallet
         let companyAmountNGN = walletAmountUSD;
@@ -399,11 +405,11 @@ export const updateCryptoPaymentStatus = async (req, res) => {
         try {
           const exchangeRate = await getExchangeRate('USD', 'NGN');
           companyAmountNGN = walletAmountUSD * exchangeRate;
-          console.log(`✅ Exchange rate USD to NGN: ${exchangeRate}`);
-          console.log(`✅ Company gets: $${walletAmountUSD.toFixed(2)} USD = ₦${companyAmountNGN.toFixed(2)} NGN`);
+          console.log(`Exchange rate USD to NGN: ${exchangeRate}`);
+          console.log(`Company gets: $${walletAmountUSD.toFixed(2)} USD = NGN ${companyAmountNGN.toFixed(2)}`);
         } catch (conversionError) {
           console.error('❌ Currency conversion failed:', conversionError.message);
-          console.log('⚠️ Company amount staying in USD:', walletAmountUSD);
+          console.log('WARNING: Company amount staying in USD:', walletAmountUSD);
         }
         
         // UPDATE COMPANY WALLET - Store 100% in NGN when no referral
@@ -430,7 +436,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             if (walletUpdateError) {
               console.error('❌ Error updating company wallet (100%):', walletUpdateError);
             } else {
-              console.log(`✅ Company wallet updated: +₦${companyAmountNGN.toFixed(2)} NGN (Total: ₦${newTotalEarnings.toFixed(2)} NGN)`);
+              console.log(`Company wallet updated: +NGN ${companyAmountNGN.toFixed(2)} (Total: NGN ${newTotalEarnings.toFixed(2)})`);
             }
           }
         } catch (companyWalletError) {
