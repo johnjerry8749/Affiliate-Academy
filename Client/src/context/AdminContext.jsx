@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { adminLogin, fetchAdminProfile } from '../api/adminApi';
-
+import api from '../api/api.js';
 const AdminContext = createContext();
 
 export const AdminProvider = ({ children }) => {
@@ -35,6 +35,43 @@ export const AdminProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  // Request a password reset email
+  const resetPasswordRequest = async (email) => {
+    try {
+      setLoading(true);
+
+      // api baseURL already includes `/api` so send only the route path
+      const response = await api.post('/admin/forgot-password', { email });
+
+      return response.data; // optional: return success data
+    } catch (error) {
+      console.error("Reset password request failed:", error);
+      throw error; // let the caller handle the error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Complete the password reset using the token
+  const resetPassword = async (token, password) => {
+    try {
+      setLoading(true);
+
+      // post to the reset endpoint (baseURL already has /api)
+      const response = await api.post('/admin/reset-password', {
+        token,
+        password,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Password reset failed:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const logout = () => {
     setAdmin(null);
@@ -44,7 +81,7 @@ export const AdminProvider = ({ children }) => {
   };
 
   return (
-    <AdminContext.Provider value={{ admin, token, login, logout, loading }}>
+    <AdminContext.Provider value={{ admin, token, login, logout, loading , resetPassword, resetPasswordRequest}}>
       {children}
     </AdminContext.Provider>
   );

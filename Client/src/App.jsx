@@ -16,6 +16,8 @@ import Terms from './components/pages/Terms.jsx';
 import ForgotPassword from './components/pages/ForgotPassword.jsx';
 import ResetPassword from './components/pages/Resetpassword.jsx';
 import CryptoPayment from './components/pages/Cryptopayment.jsx';
+import AdminForgotPassword from './components/Admin/ForgotPassword.jsx';
+import AdminResetPassword from './components/Admin/AdminResetPassword.jsx';
 
 import Dashboard from './components/Users/Dashboard.jsx';
 import Profile from './components/Users/Profile.jsx';
@@ -98,6 +100,8 @@ const Layout = () => {
 
           {/* ==================== Admin Routes ==================== */}
           <Route path="/AdminLogin" element={<AdminLogin />} />
+          <Route path='/forgot-passwordAdmin' element={<AdminForgotPassword/>}/>
+          <Route path="/admin/reset-password" element={<AdminResetPassword />} />
 
           <Route
             path="/admin/dashboard"
