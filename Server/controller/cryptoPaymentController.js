@@ -8,8 +8,9 @@ async function getExchangeRate(fromCurrency, toCurrency) {
   try {
     console.log(`Fetching exchange rate: ${fromCurrency} to ${toCurrency}`);
     
-    // Use Frankfurter API (free, reliable, no auth)
-    const url = `https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`;
+    // Use exchangerate-api.com with API key from .env
+    const apiKey = process.env.EXCHANGE_RATE_API_KEY || '9da18f7e11225a0dc7fb8f9c';
+    const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${fromCurrency}/${toCurrency}`;
     console.log(`API URL: ${url}`);
     
     const response = await fetch(url);
@@ -22,11 +23,11 @@ async function getExchangeRate(fromCurrency, toCurrency) {
     const data = await response.json();
     console.log(`API Response:`, JSON.stringify(data));
     
-    if (!data.rates || !data.rates[toCurrency]) {
-      throw new Error(`Rate for ${toCurrency} not found in response`);
+    if (data.result !== 'success') {
+      throw new Error(`API error: ${data['error-type'] || 'Unknown error'}`);
     }
     
-    const rate = data.rates[toCurrency];
+    const rate = data.conversion_rate;
     console.log(`Exchange rate ${fromCurrency} to ${toCurrency}: ${rate}`);
     return rate;
   } catch (error) {
