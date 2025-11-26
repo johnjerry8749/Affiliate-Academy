@@ -7,7 +7,9 @@ import crypto from 'crypto';
 async function getExchangeRate(fromCurrency, toCurrency) {
   try {
     console.log(`Fetching exchange rate: ${fromCurrency} to ${toCurrency}`);
-    const url = `https://v6.exchangerate-api.com/v6/${process.env.EXCHANGE_RATE_API_KEY || '9da18f7e11225a0dc7fb8f9c'}/pair/${fromCurrency}/${toCurrency}`;
+    
+    // Use exchangerate.host API (free, no auth required)
+    const url = `https://api.exchangerate.host/convert?from=${fromCurrency}&to=${toCurrency}`;
     console.log(`API URL: ${url}`);
     
     const response = await fetch(url);
@@ -18,14 +20,15 @@ async function getExchangeRate(fromCurrency, toCurrency) {
     }
     
     const data = await response.json();
-    console.log(`API Response:`, JSON.stringify(data).substring(0, 200));
+    console.log(`API Response:`, JSON.stringify(data));
     
-    if (data.result !== 'success') {
-      throw new Error(`API error: ${data['error-type']}`);
+    if (!data.success || !data.result) {
+      throw new Error(`API error: Invalid response`);
     }
     
-    console.log(`Exchange rate ${fromCurrency} to ${toCurrency}: ${data.conversion_rate}`);
-    return data.conversion_rate;
+    const rate = data.result;
+    console.log(`Exchange rate ${fromCurrency} to ${toCurrency}: ${rate}`);
+    return rate;
   } catch (error) {
     console.error(`Failed to get ${fromCurrency} to ${toCurrency} rate:`, error.message);
     throw error;
