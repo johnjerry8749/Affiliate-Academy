@@ -86,7 +86,7 @@ const AdminForgotPassword = () => {
             </form>
 
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <Link to="/admin/login" className="admin-forgot-link">
+              <Link to="/AdminLogin" className="admin-forgot-link">
                 <i className="fas fa-arrow-left"></i> Back to Login
               </Link>
             </div>

@@ -102,7 +102,7 @@ const AdminResetPassword = () => {
             </form>
 
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <Link to="/admin/login" className="admin-forgot-link">Back to Login</Link>
+              <Link to="/AdminLogin" className="admin-forgot-link">Back to Login</Link>
             </div>
           </div>
         </div>
