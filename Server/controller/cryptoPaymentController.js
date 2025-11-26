@@ -100,18 +100,28 @@ export const updateCryptoPaymentStatus = async (req, res) => {
         .single();
 
       if (newUserError) {
-        console.error('Error fetching new user:', newUserError);
+        console.error('❌ Error fetching new user:', newUserError);
+        console.error('❌ User ID:', payment.user_id);
         // Don't return - continue with user activation even if profile fetch fails
+      }
+
+      if (!newUserData) {
+        console.error('❌ No user data found for user_id:', payment.user_id);
+        return res.status(404).json({ error: 'User not found' });
       }
 
       const userCurrency = newUserData?.currency || 'NGN';
       const referrerId = newUserData?.referrer_id;
-      console.log('User currency:', userCurrency);
-      console.log('Processing crypto approval for user:', payment.user_id, 'Referrer:', referrerId);
+      console.log('✅ User data fetched successfully');
+      console.log('   User email:', newUserData.email);
+      console.log('   User currency:', userCurrency);
+      console.log('   Referrer ID:', referrerId || 'NONE');
       
       // Log if referrer exists
       if (!referrerId) {
-        console.log('⚠️ No referrer_id found for user:', payment.user_id);
+        console.log('⚠️ No referrer_id found - Company will get 100%');
+      } else {
+        console.log('✅ Referrer ID found - Will process 50/50 split');
       }
 
       // 6. Send welcome email to new user
@@ -138,21 +148,33 @@ export const updateCryptoPaymentStatus = async (req, res) => {
       }
 
       // 7. HANDLE REFERRAL COMMISSION DISTRIBUTION
+      let shouldProcessReferral = false;
+      let referrerExists = null;
+      
       if (referrerId) {
         console.log('✅ Processing referral commission for referrer:', referrerId);
 
         // Verify referrer exists and get email and currency
-        const { data: referrerExists, error: referrerCheckError } = await supabase
+        const { data: referrerData, error: referrerCheckError } = await supabase
           .from('users')
           .select('id, full_name, email, currency')
           .eq('id', referrerId)
           .single();
 
-        if (referrerCheckError || !referrerExists) {
-          console.error('❌ Referrer not found:', referrerId, referrerCheckError);
-          // Continue with company getting 100%
+        if (referrerCheckError || !referrerData) {
+          console.error('❌ Referrer not found in database!');
+          console.error('   Referrer ID:', referrerId);
+          console.error('   Error:', referrerCheckError);
+          console.log('⚠️ Company will get 100% instead');
+          shouldProcessReferral = false;
         } else {
-          console.log('✅ Referrer found:', referrerExists.full_name, referrerExists.email);
+          console.log('✅ Referrer verified:', referrerData.full_name, referrerData.email);
+          referrerExists = referrerData;
+          shouldProcessReferral = true;
+        }
+      }
+
+      if (shouldProcessReferral && referrerExists) {
 
           // Get referrer's currency for conversion
           let referrerCurrency = referrerExists.currency || 'USD';
@@ -343,8 +365,11 @@ export const updateCryptoPaymentStatus = async (req, res) => {
 
           console.log(`Company receives: ${referrerCurrency} ${companyShareConverted.toFixed(2)}`);
         }
-      } else {
-        console.log('No referrer - Company gets 100%');
+      }
+      
+      // If no referrer or referrer not found - Company gets 100%
+      if (!shouldProcessReferral) {
+        console.log('💰 No valid referrer - Company gets 100%');
         
         // Convert $50 USD to user currency for company wallet
         let companyAmountConverted = walletAmountUSD;
