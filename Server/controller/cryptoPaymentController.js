@@ -2,6 +2,7 @@
 import { supabase } from '../utils/supabaseClient.js';
 import { sendEmailDirect } from '../services/mailservices.js';
 import crypto from 'crypto';
+import fetch from 'node-fetch';
 
 export const updateCryptoPaymentStatus = async (req, res) => {
   const { payment_id, status } = req.body;
