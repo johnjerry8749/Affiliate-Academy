@@ -432,7 +432,6 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           console.error('Company wallet update failed (100%):', companyWalletError);
         }
       }
-    }
 
     res.json({
       success: true,

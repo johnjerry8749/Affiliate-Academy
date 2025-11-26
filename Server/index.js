@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet'
 import fileUpload from 'express-fileupload';
+import './services/mailservices.js';
 // import './seedAdmin.js'
 
 dotenv.config();
