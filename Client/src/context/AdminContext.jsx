@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { adminLogin, fetchAdminProfile } from '../api/adminApi';
+import { useNavigate } from "react-router-dom";
 import api from '../api/api.js';
 const AdminContext = createContext();
 
@@ -78,6 +79,7 @@ export const AdminProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminData');
+    navigate("/AdminLogin");
   };
 
   return (
