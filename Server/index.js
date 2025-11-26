@@ -38,6 +38,16 @@ app.use(fileUpload({
   createParentPath: true
 }));
 
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Affiliate Academy API',
+    status: 'running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Routes
 app.use('/api', paymentVerificationRoutes);
 app.use('/api', mailRoutes);
@@ -47,12 +57,9 @@ app.use('/api/setting', systemConfig);
 app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/estate', estateRoutes);
 app.use('/api/admin/crypto-payment', routerforAdminCryptoUdate);
-app.use('/', adminReset)
-const PORT = process.env.PORT || 5000;
+app.use('/api/admin', adminReset);
 
-// app.get('/', (req, res) => {
-//   res.send('Server is running');
-// });
+const PORT = process.env.PORT || 5000;
 
 app.get('/health', (req, res) => {
   res.status(200).json({ 
