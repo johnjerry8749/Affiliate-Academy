@@ -155,7 +155,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           console.log('✅ Referrer found:', referrerExists.full_name, referrerExists.email);
 
           // Get referrer's currency for conversion
-          const referrerCurrency = referrerExists.currency || 'USD';
+          let referrerCurrency = referrerExists.currency || 'USD';
           
           // Split in USD: 50% company, 50% referrer
           const companyShareUSD = walletAmountUSD * 0.5;
