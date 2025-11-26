@@ -61,7 +61,9 @@ const Layout = () => {
     location.pathname === '/login' ||
     location.pathname === '/register' ||
     location.pathname === '/404' ||
-    location.pathname === '/AdminLogin' ||
+    location.pathname === '/adminlogin' ||
+    location.pathname == '/forgot-passwordAdmin' ||
+    location.pathname =='/AdminLogin' ||
     location.pathname.startsWith('/dashboard') ||
     location.pathname.startsWith('/admin/') ||
     location.pathname.startsWith('/user/');
