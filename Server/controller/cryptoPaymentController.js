@@ -101,12 +101,18 @@ export const updateCryptoPaymentStatus = async (req, res) => {
 
       if (newUserError) {
         console.error('Error fetching new user:', newUserError);
+        // Don't return - continue with user activation even if profile fetch fails
       }
 
       const userCurrency = newUserData?.currency || 'NGN';
       const referrerId = newUserData?.referrer_id;
       console.log('User currency:', userCurrency);
       console.log('Processing crypto approval for user:', payment.user_id, 'Referrer:', referrerId);
+      
+      // Log if referrer exists
+      if (!referrerId) {
+        console.log('⚠️ No referrer_id found for user:', payment.user_id);
+      }
 
       // 6. Send welcome email to new user
       try {
@@ -133,7 +139,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
 
       // 7. HANDLE REFERRAL COMMISSION DISTRIBUTION
       if (referrerId) {
-        console.log('Processing referral commission for referrer:', referrerId);
+        console.log('✅ Processing referral commission for referrer:', referrerId);
 
         // Verify referrer exists and get email and currency
         const { data: referrerExists, error: referrerCheckError } = await supabase
@@ -143,9 +149,10 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           .single();
 
         if (referrerCheckError || !referrerExists) {
-          console.error('Referrer not found:', referrerId, referrerCheckError);
+          console.error('❌ Referrer not found:', referrerId, referrerCheckError);
+          // Continue with company getting 100%
         } else {
-          console.log('Referrer found:', referrerExists.full_name, referrerExists.email);
+          console.log('✅ Referrer found:', referrerExists.full_name, referrerExists.email);
 
           // Get referrer's currency for conversion
           const referrerCurrency = referrerExists.currency || 'USD';

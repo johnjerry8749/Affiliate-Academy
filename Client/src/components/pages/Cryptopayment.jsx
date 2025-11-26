@@ -248,7 +248,10 @@ const Cryptopayment = () => {
 
       // STEP 4: Send notification email to admin
       try {
-        const adminResponse = await fetch(`${import.meta.env.VITE_API_URL}/mail/send`, {
+        const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const apiURL = backendURL.endsWith('/api') ? backendURL : `${backendURL}/api`;
+        
+        const adminResponse = await fetch(`${apiURL}/mail/send`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
