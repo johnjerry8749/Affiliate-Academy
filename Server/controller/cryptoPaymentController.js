@@ -234,7 +234,13 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           console.log('Referrer ID:', referrerExists.id);
           console.log('Referrer Name:', referrerExists.full_name);
           console.log('Referrer Email:', referrerExists.email);
-          console.log('Referrer Currency:', referrerCurrency);
+          console.log('Referrer Currency (raw):', referrerCurrency);
+          
+          // Extract currency code (e.g., "NGN (₦)" -> "NGN")
+          if (referrerCurrency.includes('(')) {
+            referrerCurrency = referrerCurrency.split('(')[0].trim();
+          }
+          console.log('Referrer Currency (extracted):', referrerCurrency);
           console.log('========================================');
           
           // Split in USD: 50% company (converts to NGN), 50% referrer (converts to their currency)
