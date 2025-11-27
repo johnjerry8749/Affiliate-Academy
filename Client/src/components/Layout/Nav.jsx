@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import LanguageSwitcher from '../pages/LanguageSwitcher'
 import './Nav.css';
 
 const Nav = () => {
@@ -60,36 +61,36 @@ const Nav = () => {
         <div className={`collapse navbar-collapse ${isOpen ? 'show' : ''}`} id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-lg-center">
             <li className="nav-item nav-item-animated" style={{ animationDelay: '0.1s' }}>
-              <Link 
-                className={`nav-link ${location.pathname === '/' ? 'active' : ''}`} 
-                to="/" 
+              <Link
+                className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+                to="/"
                 onClick={closeMenu}
               >
                 Home
               </Link>
             </li>
             <li className="nav-item nav-item-animated" style={{ animationDelay: '0.2s' }}>
-              <Link 
-                className={`nav-link ${location.pathname === '/affiliate' ? 'active' : ''}`} 
-                to="/affiliate" 
+              <Link
+                className={`nav-link ${location.pathname === '/affiliate' ? 'active' : ''}`}
+                to="/affiliate"
                 onClick={closeMenu}
               >
                 Affiliate
               </Link>
             </li>
             <li className="nav-item nav-item-animated" style={{ animationDelay: '0.3s' }}>
-              <Link 
-                className={`nav-link ${location.pathname === '/services' ? 'active' : ''}`} 
-                to="/services" 
+              <Link
+                className={`nav-link ${location.pathname === '/services' ? 'active' : ''}`}
+                to="/services"
                 onClick={closeMenu}
               >
                 Services
               </Link>
             </li>
             <li className="nav-item nav-item-animated" style={{ animationDelay: '0.4s' }}>
-              <Link 
-                className={`nav-link ${location.pathname === '/real-estate' ? 'active' : ''}`} 
-                to="/real-estate" 
+              <Link
+                className={`nav-link ${location.pathname === '/real-estate' ? 'active' : ''}`}
+                to="/real-estate"
                 onClick={closeMenu}
               >
                 Real Estate
@@ -101,13 +102,16 @@ const Nav = () => {
               </Link>
             </li>
             <li className="nav-item nav-item-animated" style={{ animationDelay: '0.6s' }}>
-              <Link 
-                className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`} 
-                to="/login" 
+              <Link
+                className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}
+                to="/login"
                 onClick={closeMenu}
               >
                 Login
               </Link>
+            </li>
+            <li className="nav-item nav-item-animated" style={{ animationDelay: "0.6s" }}>
+              <LanguageSwitcher />
             </li>
             <li className="nav-item nav-item-animated mt-2 mt-lg-0" style={{ animationDelay: '0.7s' }}>
               <Link
