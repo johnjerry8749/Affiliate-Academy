@@ -160,6 +160,27 @@ const AdminCrypto = () => {
     }
   };
 
+  const deletePayment = async (paymentId) => {
+    if (!confirm('Are you sure you want to delete this payment record? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('crypto_payments')
+        .delete()
+        .eq('id', paymentId);
+
+      if (error) throw error;
+
+      showLiveAlert('Payment record deleted successfully', 'success');
+      fetchPayments();
+    } catch (err) {
+      console.error('Error deleting payment:', err);
+      showLiveAlert('Failed to delete payment: ' + err.message, 'danger');
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -450,7 +471,7 @@ const AdminCrypto = () => {
                               <small>{formatDate(payment.created_at)}</small>
                             </td>
                             <td>
-                              <div className="d-flex gap-2">
+                              <div className="d-flex gap-2 flex-wrap">
                                 <button
                                   className="btn btn-sm btn-success"
                                   onClick={() => updatePaymentStatus(payment.id, 'approved')}
@@ -475,6 +496,14 @@ const AdminCrypto = () => {
                                     Reset
                                   </button>
                                 )}
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => deletePayment(payment.id)}
+                                  title="Delete payment record"
+                                >
+                                  <i className="bi bi-trash me-1"></i>
+                                  Delete
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -539,7 +568,7 @@ const AdminCrypto = () => {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="d-flex gap-2">
+                      <div className="d-flex gap-2 flex-wrap">
                         <button
                           className="btn btn-success btn-sm flex-fill"
                           onClick={() => updatePaymentStatus(payment.id, 'approved')}
@@ -565,6 +594,13 @@ const AdminCrypto = () => {
                           </button>
                         )}
                       </div>
+                      <button
+                        className="btn btn-outline-danger btn-sm w-100 mt-2"
+                        onClick={() => deletePayment(payment.id)}
+                      >
+                        <i className="bi bi-trash me-1"></i>
+                        Delete Payment
+                      </button>
                     </div>
                   </div>
                 ))}
