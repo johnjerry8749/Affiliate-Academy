@@ -151,13 +151,13 @@ export const updateCryptoPaymentStatus = async (req, res) => {
         .single();
 
       if (newUserError) {
-        console.error('❌ Error fetching new user:', newUserError);
-        console.error('❌ User ID:', payment.user_id);
+        console.error(' Error fetching new user:', newUserError);
+        console.error(' User ID:', payment.user_id);
         // Don't return - continue with user activation even if profile fetch fails
       }
 
       if (!newUserData) {
-        console.error('❌ No user data found for user_id:', payment.user_id);
+        console.error(' No user data found for user_id:', payment.user_id);
         return res.status(404).json({ error: 'User not found' });
       }
 
@@ -262,7 +262,7 @@ export const updateCryptoPaymentStatus = async (req, res) => {
             companyShareNGN = companyShareUSD * ngnExchangeRate;
             console.log(`Company share converted: $${companyShareUSD.toFixed(2)} USD = NGN ${companyShareNGN.toFixed(2)} (rate: ${ngnExchangeRate})`);
           } catch (conversionError) {
-            console.error('❌ Company NGN conversion failed:', conversionError.message);
+            console.error(' Company NGN conversion failed:', conversionError.message);
             console.log('WARNING: Company share staying in USD:', companyShareUSD);
           }
 
@@ -337,13 +337,13 @@ export const updateCryptoPaymentStatus = async (req, res) => {
                 });
 
               if (walletUpdateError) {
-                console.error('❌ Error updating company wallet:', walletUpdateError);
+                console.error(' Error updating company wallet:', walletUpdateError);
               } else {
                 console.log(`Company wallet updated: +NGN ${companyShareNGN.toFixed(2)} (Total: NGN ${newTotalEarnings.toFixed(2)})`);
               }
             }
           } catch (companyWalletError) {
-            console.error('❌ Company wallet update failed:', companyWalletError);
+            console.error(' Company wallet update failed:', companyWalletError);
           }
 
           // 9. UPDATE REFERRER'S USER_BALANCES (store in their currency)
