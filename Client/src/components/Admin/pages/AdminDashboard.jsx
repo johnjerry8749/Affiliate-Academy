@@ -16,6 +16,7 @@ const AdminDashboard = () => {
     totalRegistrationDeposits: 0,
     totalTransactions: 0,
     totalPayout: 0,
+    companyTotalEarnings: 0,
     loading: true
   });
   const [error, setError] = useState('');
@@ -214,7 +215,7 @@ const AdminDashboard = () => {
               <div className="card-body p-3">
                 <div className="d-flex justify-content-between align-items-start mb-2">
                   <div>
-                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Total Deposit Registration</p>
+                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Total Deposit Registration on Paystack</p>
                     <h4 className="mb-0 fw-bold text-dark">{formatCurrency(dashboardData.totalRegistrationDeposits)}</h4>
                   </div>
                   <div style={{ 
@@ -256,6 +257,35 @@ const AdminDashboard = () => {
                     justifyContent: 'center'
                   }}>
                     <i className="bi bi-arrow-up-circle text-white" style={{ fontSize: '1.5rem' }}></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Company Total Earnings */}
+          <div className="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-12">
+            <div className="card border-0 h-100" style={{ 
+              backgroundColor: '#f8f9fa',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}>
+              <div className="card-body p-3">
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Company Total Earnings</p>
+                    <h4 className="mb-0 fw-bold text-dark">{formatCurrency(dashboardData.companyTotalEarnings)}</h4>
+                  </div>
+                  <div style={{ 
+                    width: '50px', 
+                    height: '50px', 
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="bi bi-bank text-white" style={{ fontSize: '1.5rem' }}></i>
                   </div>
                 </div>
               </div>

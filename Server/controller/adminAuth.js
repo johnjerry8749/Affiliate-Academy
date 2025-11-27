@@ -188,6 +188,18 @@ export const getDashboardData = async (req, res) => {
 
     if (coursesError) throw coursesError;
 
+    // Company wallet total earnings
+    const { data: companyWalletData, error: companyWalletError } = await supabase
+      .from('company_wallet')
+      .select('total_earnings');
+
+    if (companyWalletError) throw companyWalletError;
+
+    const companyTotalEarnings = companyWalletData?.reduce(
+      (sum, record) => sum + (parseFloat(record.total_earnings) || 0),
+      0
+    ) || 0;
+
     // ✅ Send all together
     return res.json({
       totalUsers: totalUsers || 0,
@@ -199,6 +211,7 @@ export const getDashboardData = async (req, res) => {
       totalRegistrationDeposits,
       totalTransactions: withdrawalData?.length || 0,
       totalPayout,
+      companyTotalEarnings,
     });
 
   } catch (error) {
