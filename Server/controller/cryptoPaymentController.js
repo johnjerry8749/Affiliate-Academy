@@ -9,7 +9,7 @@ async function getExchangeRate(fromCurrency, toCurrency) {
     console.log(`Fetching exchange rate: ${fromCurrency} to ${toCurrency}`);
     
     // Use exchangerate-api.com with API key from .env
-    const apiKey = process.env.EXCHANGE_RATE_API_KEY || '9da18f7e11225a0dc7fb8f9c';
+    const apiKey = process.env.EXCHANGE_RATE_API_KEY || '6d19a1f2e05326830a331e0c';
     const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${fromCurrency}/${toCurrency}`;
     console.log(`API URL: ${url}`);
     
