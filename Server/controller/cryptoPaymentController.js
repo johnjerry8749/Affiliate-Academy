@@ -230,6 +230,13 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           // Get referrer's currency for conversion
           let referrerCurrency = referrerExists.currency || 'USD';
           
+          console.log('=========== REFERRER DETAILS ===========');
+          console.log('Referrer ID:', referrerExists.id);
+          console.log('Referrer Name:', referrerExists.full_name);
+          console.log('Referrer Email:', referrerExists.email);
+          console.log('Referrer Currency:', referrerCurrency);
+          console.log('========================================');
+          
           // Split in USD: 50% company (converts to NGN), 50% referrer (converts to their currency)
           const companyShareUSD = walletAmountUSD * 0.5;
           const referrerTotalUSD = walletAmountUSD * 0.5;
@@ -257,20 +264,27 @@ export const updateCryptoPaymentStatus = async (req, res) => {
           let exchangeRate = 1;
           let referrerTotalConverted = referrerTotalUSD;
 
+          console.log('=========== REFERRER CONVERSION ===========');
+          console.log('Converting from USD to:', referrerCurrency);
+          console.log('Amount to convert:', referrerTotalUSD);
+
           if (referrerCurrency !== 'USD') {
             try {
+              console.log('Calling getExchangeRate for:', referrerCurrency);
               exchangeRate = await getExchangeRate('USD', referrerCurrency);
               referrerTotalConverted = referrerTotalUSD * exchangeRate;
-              console.log(`Exchange rate USD to ${referrerCurrency}: ${exchangeRate}`);
-              console.log(`Referrer share converted: $${referrerTotalUSD.toFixed(2)} USD = ${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
+              console.log(`SUCCESS: Exchange rate USD to ${referrerCurrency}: ${exchangeRate}`);
+              console.log(`SUCCESS: Referrer share converted: $${referrerTotalUSD.toFixed(2)} USD = ${referrerTotalConverted.toFixed(2)} ${referrerCurrency}`);
             } catch (conversionError) {
-              console.error('❌ Currency conversion failed:', conversionError.message);
+              console.error('ERROR: Currency conversion failed:', conversionError.message);
               console.log('WARNING: Using USD value without conversion');
               referrerCurrency = 'USD';
+              referrerTotalConverted = referrerTotalUSD;
             }
           } else {
             console.log('Referrer currency is USD, no conversion needed');
           }
+          console.log('=========================================');
 
           // Get currency symbol for display
           const currencySymbols = {
