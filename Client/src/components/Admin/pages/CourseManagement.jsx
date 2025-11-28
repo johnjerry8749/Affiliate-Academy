@@ -115,10 +115,10 @@ const CourseManagement = () => {
       return;
     }
 
-    // Validate file size (max 100MB)
-    const maxSize = 200 * 1024 * 1024; // 200MB
+    // Validate file size (max 500MB)
+    const maxSize = 500 * 1024 * 1024; // 500MB
     if (file.size > maxSize) {
-      showLiveAlert('Video file size must be less than 200MB', 'danger');
+      showLiveAlert('Video file size must be less than 500MB', 'danger');
       return;
     }
 
@@ -331,7 +331,22 @@ const CourseManagement = () => {
               </div>
               <button 
                 className="btn btn-primary mt-3 mt-md-0"
-                onClick={() => setShowAddForm(!showAddForm)}
+                onClick={() => {
+                  if (!showAddForm) {
+                    // Reset form data when opening add form
+                    setFormData({
+                      title: '',
+                      description: '',
+                      category: '',
+                      commission: '',
+                      price: '',
+                      features: '',
+                      status: 'active',
+                      course_video: ''
+                    });
+                  }
+                  setShowAddForm(!showAddForm);
+                }}
               >
                 <i className={`bi ${showAddForm ? 'bi-x-lg' : 'bi-plus-lg'} me-2`}></i>
                 {showAddForm ? 'Cancel' : 'Add New Course'}
@@ -437,7 +452,7 @@ const CourseManagement = () => {
                         style={{ backgroundColor: '#fff', color: '#000' }}
                       />
                       <small className="text-muted d-block mt-1">
-                        Upload video file (MP4, WebM, OGG, MOV - Max 100MB). This video will be displayed when users access the course.
+                        Upload video file (MP4, WebM, OGG, MOV - Max 500MB). This video will be displayed when users access the course.
                       </small>
                       {uploading && (
                         <div className="mt-2">
@@ -745,7 +760,7 @@ const CourseManagement = () => {
                     disabled={uploading}
                   />
                   <small className="text-muted d-block mt-1">
-                    Upload new video file (MP4, WebM, OGG, MOV - Max 100MB) or keep existing video.
+                    Upload new video file (MP4, WebM, OGG, MOV - Max 500MB) or keep existing video.
                   </small>
                   {uploading && (
                     <div className="mt-2">
