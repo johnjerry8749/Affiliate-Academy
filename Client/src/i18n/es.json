@@ -1,0 +1,159 @@
+{
+    "home": {
+        "hero": {
+            "title": "Academia de Afiliados",
+            "subtitle": "La Información es Riqueza",
+            "description": "No somos solo una plataforma; somos un mercado digital dinámico donde los sueños se alimentan de conocimiento y el éxito está al alcance.",
+            "getStarted": "Empezar",
+            "featured": {
+                "badge": "Destacado",
+                "title": "¿Quieres generar ingresos pasivos en línea comerciando información como una mercancía?",
+                "text": "El mercado de productos digitales donde comerciamos información como una mercancía. Affiliate Academy es un mercado de productos digitales que ofrece valor para satisfacer los impulsos informativos de los clientes. La diferencia entre un deseo y su resultado es «CONOCIMIENTO».",
+                "list": {
+                    "signup": "Registrarse",
+                    "promote": "Promocionar",
+                    "earn": "Ganar"
+                },
+                "button": "Comienza Tu Viaje"
+            },
+            "card1": {
+                "badge": "Analítica",
+                "title": "Analíticas en Tiempo Real",
+                "text": "Comerciamos diversos tipos de información que brindan el conocimiento necesario para hacer que los sueños, metas y deseos ocurran más rápido. Un mercado donde el conocimiento es poder y el éxito no tiene límites. En Affiliate Academy hemos desbloqueado el secreto para convertir deseos en realidad mediante el poder transformador de la información y los bienes raíces."
+            },
+            "card2": {
+                "badge": "Comunidad",
+                "title": "Comunidad Vibrante",
+                "text": "¿Quieres generar ingresos pasivos en línea comerciando información y bienes raíces como mercancías? Prepárate para experimentar libertad financiera como nunca antes. Ofrecemos una oportunidad exclusiva para que nuestros Comerciantes de Información Afiliados comiencen un viaje de inversión de por vida con nuestro revolucionario sistema de «Comisión en Cadena»."
+            }
+        },
+        "video": {
+            "badge": "Ver Ahora",
+            "title": "Descubre Cómo Comenzar Tu Viaje",
+            "description": "Mira este video exclusivo para aprender cómo puedes transformar tu futuro financiero a través de nuestras estrategias comprobadas de marketing de afiliación y sistema de comercio de información."
+        },
+        "products": {
+            "title": "Productos Más",
+            "titleHighlight": "Vendidos",
+            "subtitle": "Descubre nuestros productos digitales más populares y recursos de información",
+            "comingSoon": "PRÓXIMAMENTE..."
+        },
+        "cta": {
+            "affiliate": {
+                "title": "Conviértete en Afiliado",
+                "description": "Únete a nuestro programa de afiliación y comienza a ganar comisiones promocionando nuestros productos digitales. Convierte tu red en ingresos con nuestro sistema comprobado.",
+                "benefits": {
+                    "commissions": "Gana generosas comisiones",
+                    "materials": "Accede a materiales de marketing",
+                    "analytics": "Seguimiento y análisis en tiempo real",
+                    "support": "Equipo de soporte dedicado"
+                },
+                "button": "Conviértete en Afiliado"
+            },
+            "customer": {
+                "title": "Compra como Cliente",
+                "description": "Los clientes son la razón por la que Affiliate Academy existe. Son los buscadores, los aprendices, los que desean transformar sus vidas a través de información valiosa. Al explorar nuestro mercado diverso, los clientes pueden descubrir un tesoro de productos digitales adaptados a sus necesidades e intereses.",
+                "benefits": {
+                    "premium": "Productos digitales premium",
+                    "instant": "Acceso instantáneo después de la compra",
+                    "lifetime": "Actualizaciones y soporte de por vida",
+                    "guarantee": "Garantía de devolución de dinero"
+                }
+            }
+        },
+        "faq": {
+            "title": "Preguntas",
+            "titleHighlight": "Frecuentes",
+            "subtitle": "Encuentra respuestas a preguntas comunes sobre Affiliate Academy.",
+            "support": {
+                "heading": "¿Aún tienes preguntas?",
+                "description": "Nuestro equipo de soporte está aquí para ayudarte. Comunícate con nosotros en cualquier momento.",
+                "button": "Contactar Soporte"
+            },
+            "items": {
+                "q1": {
+                    "question": "¿Qué es Affiliate Academy?",
+                    "answer": "Affiliate Academy es un mercado digital dinámico donde la información se comercia como una mercancía. Es una plataforma diseñada para ayudarte a desbloquear libertad financiera a través del marketing de afiliación y ventas de productos digitales."
+                },
+                "q2": {
+                    "question": "¿Cómo puedo convertirme en vendedor en Affiliate Academy?",
+                    "answer": "Para convertirte en vendedor en Affiliate Academy, debes registrarte en nuestra plataforma, completar el proceso de registro de vendedor y enviar tus productos digitales para aprobación. Nuestro equipo revisará tus productos y te guiará en los próximos pasos."
+                },
+                "q3": {
+                    "question": "¿Cuáles son los beneficios de ser vendedor en Affiliate Academy?",
+                    "answer": "Como vendedor, disfrutarás de acceso a una gran base de clientes, análisis en tiempo real, apoyo de marketing, procesamiento de pagos seguro y la oportunidad de escalar tu negocio a través de nuestra red de afiliados."
+                },
+                "q4": {
+                    "question": "¿Cómo ganan comisiones los afiliados en Affiliate Academy?",
+                    "answer": "Los afiliados ganan comisiones promocionando productos de vendedores a través de sus enlaces de afiliados únicos. Cada venta exitosa genera una comisión que se rastrea automáticamente y se paga al afiliado según nuestra estructura de comisiones."
+                },
+                "q5": {
+                    "question": "¿Cómo puedo contactar al soporte al cliente de Affiliate Academy?",
+                    "answer": "Puedes contactar a nuestro equipo de soporte al cliente a través de múltiples canales: soporte por correo electrónico, chat en vivo en nuestro sitio web, o a través de tu panel de control de cuenta. Normalmente respondemos en 24-48 horas."
+                },
+                "q6": {
+                    "question": "¿Qué hace Affiliate Academy?",
+                    "answer": "Affiliate Academy opera como un mercado digital integral que conecta vendedores con afiliados y clientes. Facilitamos la compra, venta y promoción de productos digitales mientras proporcionamos herramientas de seguimiento, análisis y procesamiento de pagos."
+                },
+                "q7": {
+                    "question": "¿Hay restricciones sobre qué tipo de productos se pueden subir a Affiliate Academy?",
+                    "answer": "Aceptamos la mayoría de productos digitales, pero tenemos directrices. Los productos deben ser legales, no fraudulentos y cumplir con nuestra política de contenido. No permitimos productos que violen derechos de autor, contengan malware o promuevan actividades ilegales."
+                },
+                "q8": {
+                    "question": "¿Cuál es el proceso para resolver disputas entre vendedores y afiliados en Affiliate Academy?",
+                    "answer": "Tenemos un equipo dedicado de resolución de disputas que maneja conflictos de manera justa. Ambas partes pueden enviar su evidencia y reclamos a través del centro de resolución. Investigamos a fondo y tomamos decisiones basadas en nuestras políticas de plataforma y la evidencia proporcionada."
+                },
+                "q9": {
+                    "question": "¿Hay un período específico para que los vendedores reciban sus comisiones en Affiliate Academy?",
+                    "answer": "Las comisiones se procesan y pagan típicamente dentro de 30 días de la transacción. Sin embargo, los vendedores pueden revisar su panel de ganancias en tiempo real en cualquier momento para rastrear comisiones pendientes y completadas."
+                },
+                "q10": {
+                    "question": "¿Puedo promocionar productos de múltiples vendedores como afiliado en Affiliate Academy?",
+                    "answer": "¡Absolutamente! Como afiliado, puedes promocionar productos de múltiples vendedores. Esto te permite diversificar tus flujos de ingresos y ofrecer una variedad más amplia de productos a tu audiencia."
+                }
+            }
+        },
+        "testimonials": {
+            "title": "Lo que Dice",
+            "titleHighlight": "Nuestra Comunidad",
+            "subtitle": "Historias reales de personas reales ganando ingresos pasivos en Affiliate Academy",
+            "items": {
+                "t1": {
+                    "text": "Affiliate Academy ha transformado completamente mis flujos de ingresos. La plataforma es muy intuitiva y el equipo de soporte es increíble. ¡He ganado más en 3 meses de lo que esperaba ganar en un año!",
+                    "name": "Sarah Johnson",
+                    "role": "Especialista en Marketing Digital y Afiliado"
+                },
+                "t2": {
+                    "text": "Como vendedor, esta plataforma me ha dado acceso a miles de clientes potenciales. La estructura de comisiones es justa y el sistema de seguimiento es exacto. ¡Muy recomendado!",
+                    "name": "Marcus Williams",
+                    "role": "Creador de Contenido y Vendedor"
+                },
+                "t3": {
+                    "text": "¡El sistema de comisión en cadena es revolucionario! Puedo ganar de múltiples niveles de referencias. Esta es la mejor oportunidad de ingresos pasivos que he encontrado.",
+                    "name": "Amara Okafor",
+                    "role": "Coach Empresarial y Afiliado"
+                }
+            }
+        },
+        "footer": {
+            "tagline1": "La Información es Nuestra Mercancía. Riqueza. Poder.",
+            "tagline2": "No somos solo una plataforma; somos un mercado digital dinámico donde los sueños se alimentan de conocimiento.",
+            "quickLinks": "Enlaces Rápidos",
+            "home": "Inicio",
+            "affiliate": "Afiliado",
+            "services": "Servicios",
+            "realEstate": "Bienes Raíces",
+            "support": "Soporte",
+            "helpCenter": "Centro de Ayuda",
+            "faq": "Preguntas Frecuentes",
+            "becomeAffiliate": "Conviértete en Afiliado",
+            "login": "Iniciar Sesión",
+            "contact": "Contáctanos",
+            "country": "Nigeria",
+            "newsletter": "Boletín",
+            "yourEmail": "Tu correo electrónico",
+            "rights": "Todos los Derechos Reservados por",
+            "designedBy": "Diseñado por"
+        }
+    }
+}

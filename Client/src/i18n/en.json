@@ -1,0 +1,159 @@
+{
+    "home": {
+        "hero": {
+            "title": "Affiliate Academy",
+            "subtitle": "Information Is Wealth",
+            "description": "We are not just a platform; we are a dynamic digital marketplace where dreams are fueled by knowledge, and success is within reach.",
+            "getStarted": "Get Started",
+            "featured": {
+                "badge": "Featured",
+                "title": "Do you want to Make passive Income online by trading information as a commodity??",
+                "text": "The digital products marketplace where we trade information as a commodity. Affiliate Academy is a digital products marketplace providing the value that satisfies the information impulses of Customers. The gap inbetween a desire and it's result is \"KNOWLEDGE\"",
+                "list": {
+                    "signup": "SignUp",
+                    "promote": "Promote",
+                    "earn": "Earn"
+                },
+                "button": "Start Your Journey"
+            },
+            "card1": {
+                "badge": "Analytics",
+                "title": "Real-Time Analytics",
+                "text": "We Trade varieties of information that provides the knowledge necessary to make dreams,goals,desires happen and happen more quickly. A Market where knowledge is power and success is unlimited. At Affiliate Academy, we have unlocked the secret to turning desires into reality through the transformative power of information and real estate. Our mission is clear: to provide you with the tools and resources you need to make your dreams come true – faster and with greater ease."
+            },
+            "card2": {
+                "badge": "Community",
+                "title": "Vibrant Community",
+                "text": "Do you want to make passive income online by trading information and real estate as commodities? Get ready to experience financial freedom like never before. We are proud to offer an exclusive opportunity for our Affiliated Information Traders to embark on a lifetime investment journey with our extra revolutionary \"Chain Commission\" system."
+            }
+        },
+        "video": {
+            "badge": "Watch Now",
+            "title": "Discover How to Start Your Journey",
+            "description": "Watch this exclusive video to learn how you can transform your financial future through our proven affiliate marketing strategies and information trading system."
+        },
+        "products": {
+            "title": "Top Selling",
+            "titleHighlight": "Products",
+            "subtitle": "Discover our most popular digital products and information resources",
+            "comingSoon": "COMING SOON..."
+        },
+        "cta": {
+            "affiliate": {
+                "title": "Become an Affiliate",
+                "description": "Join our affiliate program and start earning commissions by promoting our digital products. Turn your network into income with our proven system.",
+                "benefits": {
+                    "commissions": "Earn generous commissions",
+                    "materials": "Access marketing materials",
+                    "analytics": "Real-time tracking & analytics",
+                    "support": "Dedicated support team"
+                },
+                "button": "Become an Affiliate"
+            },
+            "customer": {
+                "title": "Shop as a Customer",
+                "description": "Customers are the reason why Affiliate Academy exists. They are the seekers, the learners, the ones eager to transform their lives through valuable information. By browsing our diverse marketplace, customers can discover a treasure trove of digital products tailored to their needs and interests.",
+                "benefits": {
+                    "premium": "Premium digital products",
+                    "instant": "Instant access after purchase",
+                    "lifetime": "Lifetime updates & support",
+                    "guarantee": "Money-back guarantee"
+                }
+            }
+        },
+        "faq": {
+            "title": "Frequently Asked",
+            "titleHighlight": "Questions",
+            "subtitle": "Find answers to common questions about Affiliate Academy.",
+            "support": {
+                "heading": "Still have questions?",
+                "description": "Our support team is here to help you. Reach out to us anytime.",
+                "button": "Contact Support"
+            },
+            "items": {
+                "q1": {
+                    "question": "What is Affiliate Academy?",
+                    "answer": "Affiliate Academy is a dynamic digital marketplace where information is traded as a commodity. It's a platform designed to help you unlock financial freedom through affiliate marketing and digital product sales."
+                },
+                "q2": {
+                    "question": "How can I become a vendor on Affiliate Academy?",
+                    "answer": "To become a vendor on Affiliate Academy, you need to sign up on our platform, complete the vendor registration process, and submit your digital products for approval. Our team will review your products and guide you through the next steps."
+                },
+                "q3": {
+                    "question": "What are the benefits of being a vendor on Affiliate Academy?",
+                    "answer": "As a vendor, you'll enjoy access to a large customer base, real-time analytics, marketing support, secure payment processing, and the opportunity to scale your business through our affiliate network."
+                },
+                "q4": {
+                    "question": "How do affiliates earn commissions on Affiliate Academy?",
+                    "answer": "Affiliates earn commissions by promoting vendor products through their unique affiliate links. Each successful sale generates a commission that's automatically tracked and paid to the affiliate according to our commission structure."
+                },
+                "q5": {
+                    "question": "How can I contact customer support on Affiliate Academy?",
+                    "answer": "You can reach our customer support team through multiple channels: email support, live chat on our website, or through your account dashboard. We typically respond within 24-48 hours."
+                },
+                "q6": {
+                    "question": "What does Affiliate Academy do?",
+                    "answer": "Affiliate Academy operates as a comprehensive digital marketplace that connects vendors with affiliates and customers. We facilitate the buying, selling, and promotion of digital products while providing tools for tracking, analytics, and payment processing."
+                },
+                "q7": {
+                    "question": "Are there any restrictions on the type of products that can be uploaded on Affiliate Academy?",
+                    "answer": "We accept most digital products, but we do have guidelines. Products must be legal, non-fraudulent, and comply with our content policy. We don't allow products that violate copyright, contain malware, or promote illegal activities."
+                },
+                "q8": {
+                    "question": "What is the process for resolving disputes between vendors and affiliates on Affiliate Academy?",
+                    "answer": "We have a dedicated dispute resolution team that handles conflicts fairly. Both parties can submit their evidence and claims through the resolution center. We investigate thoroughly and make decisions based on our platform policies and evidence provided."
+                },
+                "q9": {
+                    "question": "Is there a specific timeframe for vendors to receive their commissions on Affiliate Academy?",
+                    "answer": "Commissions are typically processed and paid out within 30 days of the transaction. However, vendors can check their real-time earnings dashboard anytime to track pending and completed commissions."
+                },
+                "q10": {
+                    "question": "Can I promote products from multiple Vendors as an affiliate on Affiliate Academy?",
+                    "answer": "Absolutely! As an affiliate, you can promote products from multiple vendors. This allows you to diversify your income streams and offer a wider variety of products to your audience."
+                }
+            }
+        },
+        "testimonials": {
+            "title": "What Our",
+            "titleHighlight": "Community Says",
+            "subtitle": "Real stories from real people making passive income on Affiliate Academy",
+            "items": {
+                "t1": {
+                    "text": "Affiliate Academy has completely transformed my income streams. The platform is so intuitive and the support team is amazing. I've earned more in 3 months than I expected in a year!",
+                    "name": "Sarah Johnson",
+                    "role": "Digital Marketer & Affiliate"
+                },
+                "t2": {
+                    "text": "As a vendor, this platform has given me access to thousands of potential customers. The commission structure is fair and the tracking system is spot on. Highly recommended!",
+                    "name": "Marcus Williams",
+                    "role": "Content Creator & Vendor"
+                },
+                "t3": {
+                    "text": "The chain commission system is revolutionary! I can earn from multiple levels of referrals. This is the best passive income opportunity I've found.",
+                    "name": "Amara Okafor",
+                    "role": "Business Coach & Affiliate"
+                }
+            }
+        },
+        "footer": {
+            "tagline1": "Information Is Our Commodity. Wealth. Power.",
+            "tagline2": "We are not just a platform; we are a dynamic digital marketplace where dreams are fueled by knowledge.",
+            "quickLinks": "Quick Links",
+            "home": "Home",
+            "affiliate": "Affiliate",
+            "services": "Services",
+            "realEstate": "Real Estate",
+            "support": "Support",
+            "helpCenter": "Help Center",
+            "faq": "FAQ",
+            "becomeAffiliate": "Become an Affiliate",
+            "login": "Login",
+            "contact": "Contact Us",
+            "country": "Nigeria",
+            "newsletter": "Newsletter",
+            "yourEmail": "Your email",
+            "rights": "All Rights Reserved by",
+            "designedBy": "Designed by"
+        }
+    }
+}

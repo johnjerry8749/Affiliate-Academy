@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Footer.css';
 
 const Footer = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -14,11 +16,10 @@ const Footer = () => {
               <span className="text-success">Affiliate</span> Academy
             </h3>
             <p className="text-muted mb-3">
-              Information Is Our Commodity. Wealth. Power.
+              {t('home.footer.tagline1')}pp
             </p>
             <p className="text-muted small">
-              We are not just a platform; we are a dynamic digital marketplace where dreams
-              are fueled by knowledge, and success is within reach.
+              {t('home.footer.tagline2')}
             </p>
             
             {/* Social Media Icons with Hover Animation */}
@@ -64,30 +65,30 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div className="col-lg-2 col-md-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <h5 className="mb-3 text-success footer-heading">Quick Links</h5>
+            <h5 className="mb-3 text-success footer-heading">{t('home.footer.quickLinks')}</h5>
             <ul className="list-unstyled footer-links">
               <li className="mb-2">
                 <Link to="/" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  Home
+                  {t('home.footer.home')}
                 </Link>
               </li>
               <li className="mb-2">
                 <Link to="/affiliate" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  Affiliate
+                  {t('home.footer.affiliate')}
                 </Link>
               </li>
               <li className="mb-2">
                 <Link to="/Services" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  Services
+                  {t('home.footer.services')}
                 </Link>
               </li>
               <li className="mb-2">
                 <Link to="/real-estate" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  Real Estate
+                  {t('home.footer.realEstate')}
                 </Link>
               </li>
             </ul>
@@ -95,30 +96,30 @@ const Footer = () => {
 
           {/* Support */}
           <div className="col-lg-3 col-md-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <h5 className="mb-3 text-success footer-heading">Support</h5>
+            <h5 className="mb-3 text-success footer-heading">{t('home.footer.support')}</h5>
             <ul className="list-unstyled footer-links">
               <li className="mb-2">
                 <a href="/contact" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  Help Center
+                  {t('home.footer.helpCenter')}
                 </a>
               </li>
               <li className="mb-2">
                 <a href="#faq" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  FAQ
+                  {t('home.footer.faq')}
                 </a>
               </li>
               <li className="mb-2">
                 <a href="/register" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  Become an Affiliate
+                  {t('home.footer.becomeAffiliate')}
                 </a>
               </li>
               <li className="mb-2">
                 <a href="/Login" className="footer-link">
                   <i className="bi bi-chevron-right me-1"></i>
-                  Login
+                  {t('home.footer.login')}
                 </a>
               </li>
             </ul>
@@ -126,7 +127,7 @@ const Footer = () => {
 
           {/* Contact */}
           <div className="col-lg-3 col-md-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            <h5 className="mb-3 text-success footer-heading">Contact Us</h5>
+            <h5 className="mb-3 text-success footer-heading">{t('home.footer.contact')}</h5>
             <ul className="list-unstyled footer-contact">
               <li className="mb-3 contact-item">
                 <i className="bi bi-telephone-fill text-success me-2"></i>
@@ -142,18 +143,18 @@ const Footer = () => {
               </li>
               <li className="contact-item">
                 <i className="bi bi-geo-alt-fill text-success me-2"></i>
-                <span className="text-grey">USA</span>
+                <span className="text-grey">{t('home.footer.country')}</span>
               </li>
             </ul>
 
             {/* Newsletter Subscription (Optional) */}
             <div className="mt-4">
-              <h6 className="text-success mb-2">Newsletter</h6>
+              <h6 className="text-success mb-2">{t('home.footer.newsletter')}</h6>
               <div className="input-group input-group-sm newsletter-form">
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="Your email"
+                  placeholder={t('home.footer.yourEmail')}
                   aria-label="Email"
                 />
                 <button className="btn btn-success" type="button">
@@ -169,13 +170,13 @@ const Footer = () => {
         <div className="row animate-fade-in">
           <div className="col-md-6 text-center text-md-start mb-3 mb-md-0">
             <p className="text--success small mb-0">
-              &copy; {currentYear} All Rights Reserved by{' '}
+              &copy; {currentYear} {t('home.footer.rights')}{' '}
               <span className="text-success fw-bold">Affiliate Academy</span>
             </p>
           </div>
           <div className="col-md-6 text-center text-md-end">
             <p className="text--success small mb-0">
-              Designed by{' '}
+              {t('home.footer.designedBy')}{' '}
               <a
                 href="#"
                 target="_blank"
