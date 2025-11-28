@@ -129,9 +129,9 @@ const Affiliate = () => {
                       <i className="bi bi-info-circle-fill text-danger" style={{ fontSize: '3rem' }}></i>
                     </div>
                     <h4 className="card-title fw-bold mb-3">NOTE</h4>
-                    <p className="card-text text-muted">
+                    {/* <p className="card-text text-muted">
                       If an individual is not yet an affiliate on Affiliate Academy but wishes to join our network of promoters and earners, you can easily sign up as an affiliate by selecting the option to become an affiliate below and pay our yearly fee of $3.
-                    </p>
+                    </p> */}
                     <p className="card-text text-muted">
                       You can unlock the potential to earn commissions like thousands of others by promoting valuable digital products and real estate properties available on our platform.
                     </p>

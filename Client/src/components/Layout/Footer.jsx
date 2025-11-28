@@ -143,7 +143,11 @@ const Footer = () => {
               </li>
               <li className="contact-item">
                 <i className="bi bi-geo-alt-fill text-success me-2"></i>
+ updatefetch
                 <span className="text-grey">{t('home.footer.country')}</span>
+
+                <span className="text-grey">Usa</span>
+
               </li>
             </ul>
 

@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../../supabase';
 import { useAuth } from '../../context/AuthProvider';
-import { v4 as uuidv4 } from "uuid";
 
 
 const Cryptopayment = () => {
   const { register } = useAuth();
-  const { state } = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -17,9 +16,19 @@ const Cryptopayment = () => {
   const [copied, setCopied] = useState(false);
   const [paymentProof, setPaymentProof] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const userData = state?.userData;
+  
+  // Get registration data from state or sessionStorage
+  const getRegistrationData = () => {
+    const stateData = location.state?.registrationData;
+    if (stateData) return stateData;
+    
+    const stored = sessionStorage.getItem('cryptoRegistrationData');
+    return stored ? JSON.parse(stored) : null;
+  };
+  
+  const userData = getRegistrationData();
 
-  console.log('i just passed', userData)
+  console.log('Registration data:', userData)
 
 
   // Live Alert Function
@@ -237,14 +246,58 @@ const Cryptopayment = () => {
         throw new Error('Failed to save payment proof');
       }
 
+      // STEP 4: Send notification email to admin
+      try {
+        const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const apiURL = backendURL.endsWith('/api') ? backendURL : `${backendURL}/api`;
+        
+        const adminResponse = await fetch(`${apiURL}/mail/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: import.meta.env.VITE_ADMIN_EMAIL || 'affiliateacademy89@gmail.com',
+            subject: '🔔 New Crypto Payment Proof Uploaded',
+            message: `A new user has uploaded their crypto payment proof and is awaiting approval.
+            
+            User Details:
+            📧 Email: ${userData.email}
+            👤 Full Name: ${userData.fullName}
+            📱 Phone: ${userData.phoneNumber}
+            🌍 Country: ${userData.country}
+            
+            Payment Details:
+            💳 Wallet: ${walletName}
+            📍 Wallet Address: ${walletAddress}
+            
+            Please review and approve/reject this payment in the admin dashboard as soon as possible.
+            
+            View Payment Proof: ${urlData.publicUrl}`,
+            name: 'Admin Team'
+          })
+        });
+
+        if (adminResponse.ok) {
+          console.log('✅ Admin notification sent');
+        }
+      } catch (emailError) {
+        console.error('Failed to send admin notification:', emailError);
+        // Don't fail the submission if email fails
+      }
+
       // Success!
       showLiveAlert('Payment proof submitted successfully! Awaiting approval (24-48 hrs)', 'success');
+      
+      // Clear sessionStorage
+      sessionStorage.removeItem('cryptoRegistrationData');
+
+      // Sign out the user since they cannot login until approved
+      await supabase.auth.signOut();
 
       // Redirect after 3 seconds
       setTimeout(() => {
         navigate('/login', {
           replace: true,
-          state: { message: 'Registration complete! Your crypto payment is under review.' }
+          state: { message: 'Registration complete! Your crypto payment is under review. You will receive an email when approved.' }
         });
       }, 3000);
 
@@ -343,7 +396,7 @@ const Cryptopayment = () => {
               {/* Wallet Amount */}
               <div className="mb-3 d-flex justify-content-center ">
                 <span className="badge bg-success fs-6" >
-                  Amount: {parseFloat(walletAmount || 0).toFixed(2)}
+                  Amount: $ {parseFloat(walletAmount || 0).toFixed(2)}
                 </span>
               </div>
 

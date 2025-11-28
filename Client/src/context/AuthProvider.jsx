@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       setProfile(null);
       setProfileLoading(false);
     }
-  }, [user?.id, loading, fetchProfile]);
+  }, [user, loading, fetchProfile]);
 
   // Register (unchanged)
   const register = async ({
@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     if (authError) throw authError;
     if (!authData.user) throw new Error('No user');
 
-    // Persist user profile in `users` table including `paid` and `role`
+    // Persist user profile in `users` table including `paid`, `role`, and `referrer_id`
     await supabase.from('users').insert({
       id: authData.user.id,
       full_name: fullName,
@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }) => {
       agreed_to_terms: agreedToTerms,
       role,
       paid: paid,
+      referrer_id: referralCode || null, // Save referrer_id for commission processing
     });
 
     await supabase.from('user_balances').insert({
@@ -150,15 +151,14 @@ export const AuthProvider = ({ children }) => {
   // };
   // Login - NOW BLOCKS UNPAID USERS
   const login = async (email, password) => {
-    try {
-      // Step 1: Try to sign in with Supabase Auth
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    // Step 1: Try to sign in with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) throw error;
-      if (!data?.user) throw new Error('Login failed: No user returned');
+    if (error) throw error;
+    if (!data?.user) throw new Error('Login failed: No user returned');
 
       // Step 2: Check the `paid` status in your custom `users` table
       const { data: profileData, error: profileError } = await supabase
@@ -178,17 +178,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error(
           'Your account is pending payment approval. You cannot log in yet. Please wait 24-48 hours after submitting your crypto payment proof.'
         );
-      }
-
-      // Step 3: Only if paid === true → allow login
-      setUser(data.user);
-      await fetchProfile(data.user.id);
-      return data;
-
-    } catch (err) {
-      // Re-throw the error so your login form can show it
-      throw err;
-    }
+      }    // Step 3: Only if paid === true → allow login
+    setUser(data.user);
+    await fetchProfile(data.user.id);
+    return data;
   };
 
   // Logout

@@ -37,8 +37,8 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="admin-login-container">
-      <div className="admin-login-wrapper">
+    <div className="admin-login-container mt-5 ">
+      <div className="admin-login-wrapper ">
         <div className="admin-login-card">
           {/* Logo Section */}
           <div className="admin-logo-section">

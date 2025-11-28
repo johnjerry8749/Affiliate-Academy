@@ -24,7 +24,7 @@ import adminReset from './routes/adminResetpassword.js';
 
 // Simple CORS setup
 app.use(cors({
-  origin: ['http://localhost:5174', 'https://affiliate-academy-e8o9.vercel.app','http://localhost:5173'], // Your specific frontend URLs
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://my-affiliateacademy.com'], // Your specific frontend URLs
   credentials: true
 }));
 
@@ -38,6 +38,16 @@ app.use(fileUpload({
   createParentPath: true
 }));
 
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Affiliate Academy API',
+    status: 'running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Routes
 app.use('/api', paymentVerificationRoutes);
 app.use('/api', mailRoutes);
@@ -47,12 +57,9 @@ app.use('/api/setting', systemConfig);
 app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/estate', estateRoutes);
 app.use('/api/admin/crypto-payment', routerforAdminCryptoUdate);
-app.use('/', adminReset)
-const PORT = process.env.PORT || 5000;
+app.use('/api/admin', adminReset);
 
-// app.get('/', (req, res) => {
-//   res.send('Server is running');
-// });
+const PORT = process.env.PORT || 5000;
 
 app.get('/health', (req, res) => {
   res.status(200).json({ 
@@ -61,7 +68,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`CORS enabled for: http://localhost:5173 and https://affiliate-academy-e8o9.vercel.app`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`CORS enabled for: http://localhost:5173 and https://affiliate-academy-e8o9.vercel.app`);
+  });
+}
+
+// Export for Vercel
+export default app;

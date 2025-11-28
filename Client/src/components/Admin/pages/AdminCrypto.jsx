@@ -124,9 +124,10 @@ const AdminCrypto = () => {
 
   const updatePaymentStatus = async (paymentId, newStatus) => {
     try {
-      // const token = (await supabase.auth.getSession()).data.session?.access_token;
-
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/crypto-payment/update`, {
+      console.log('Updating payment:', paymentId, 'to status:', newStatus);
+      
+      // Use backend API with authentication
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/admin/crypto-payment/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,23 +135,49 @@ const AdminCrypto = () => {
         },
         body: JSON.stringify({
           payment_id: paymentId,
-          status: newStatus, // 'approved' or 'rejected'
-        }),
+          status: newStatus,
+        })
       });
 
-      const result = await res.json();
+      const result = await response.json();
 
-      if (!res.ok) throw new Error(result.error);
+      if (!response.ok) {
+        throw new Error(result.error || result.message || 'Failed to update payment status');
+      }
 
+      console.log('Update successful:', result);
       showLiveAlert(
         newStatus === 'approved'
           ? 'Payment approved & user activated!'
           : 'Payment rejected.',
         'success'
       );
+      
       fetchPayments();
     } catch (err) {
+      console.error('Error updating payment:', err);
       showLiveAlert('Failed: ' + err.message, 'danger');
+    }
+  };
+
+  const deletePayment = async (paymentId) => {
+    if (!confirm('Are you sure you want to delete this payment record? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('crypto_payments')
+        .delete()
+        .eq('id', paymentId);
+
+      if (error) throw error;
+
+      showLiveAlert('Payment record deleted successfully', 'success');
+      fetchPayments();
+    } catch (err) {
+      console.error('Error deleting payment:', err);
+      showLiveAlert('Failed to delete payment: ' + err.message, 'danger');
     }
   };
 
@@ -444,11 +471,10 @@ const AdminCrypto = () => {
                               <small>{formatDate(payment.created_at)}</small>
                             </td>
                             <td>
-                              <div className="d-flex gap-2">
+                              <div className="d-flex gap-2 flex-wrap">
                                 <button
                                   className="btn btn-sm btn-success"
                                   onClick={() => updatePaymentStatus(payment.id, 'approved')}
-                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-check-circle me-1"></i>
                                   Approve
@@ -456,10 +482,27 @@ const AdminCrypto = () => {
                                 <button
                                   className="btn btn-sm btn-danger"
                                   onClick={() => updatePaymentStatus(payment.id, 'rejected')}
-                                  disabled={payment.status === 'approved' || payment.status === 'rejected'}
                                 >
                                   <i className="bi bi-x-circle me-1"></i>
                                   Reject
+                                </button>
+                                {(payment.status === 'approved' || payment.status === 'rejected') && (
+                                  <button
+                                    className="btn btn-sm btn-warning"
+                                    onClick={() => updatePaymentStatus(payment.id, 'pending')}
+                                    title="Reset to pending status"
+                                  >
+                                    <i className="bi bi-arrow-counterclockwise me-1"></i>
+                                    Reset
+                                  </button>
+                                )}
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => deletePayment(payment.id)}
+                                  title="Delete payment record"
+                                >
+                                  <i className="bi bi-trash me-1"></i>
+                                  Delete
                                 </button>
                               </div>
                             </td>
@@ -525,11 +568,10 @@ const AdminCrypto = () => {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="d-flex gap-2">
+                      <div className="d-flex gap-2 flex-wrap">
                         <button
                           className="btn btn-success btn-sm flex-fill"
                           onClick={() => updatePaymentStatus(payment.id, 'approved')}
-                          disabled={payment.status === 'approved' || payment.status === 'rejected'}
                         >
                           <i className="bi bi-check-circle me-1"></i>
                           Approve
@@ -537,12 +579,28 @@ const AdminCrypto = () => {
                         <button
                           className="btn btn-danger btn-sm flex-fill"
                           onClick={() => updatePaymentStatus(payment.id, 'rejected')}
-                          disabled={payment.status === 'approved' || payment.status === 'rejected'}
                         >
                           <i className="bi bi-x-circle me-1"></i>
                           Reject
                         </button>
+                        {(payment.status === 'approved' || payment.status === 'rejected') && (
+                          <button
+                            className="btn btn-warning btn-sm flex-fill"
+                            onClick={() => updatePaymentStatus(payment.id, 'pending')}
+                            title="Reset to pending status"
+                          >
+                            <i className="bi bi-arrow-counterclockwise me-1"></i>
+                            Reset
+                          </button>
+                        )}
                       </div>
+                      <button
+                        className="btn btn-outline-danger btn-sm w-100 mt-2"
+                        onClick={() => deletePayment(payment.id)}
+                      >
+                        <i className="bi bi-trash me-1"></i>
+                        Delete Payment
+                      </button>
                     </div>
                   </div>
                 ))}

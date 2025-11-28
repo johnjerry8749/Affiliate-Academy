@@ -6,7 +6,7 @@ import crypto from 'crypto';
 const adminReset = express.Router();
 import { sendResetEmail } from "../services/AmdminResetMail.js";
 
-adminReset.post('/admin/forgot-password', async (req, res) => {
+adminReset.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: 'Email required' });
 
@@ -59,7 +59,7 @@ adminReset.post('/admin/forgot-password', async (req, res) => {
     }
 });
 
-adminReset.post('/admin/reset-password', async (req, res) => {
+adminReset.post('/reset-password', async (req, res) => {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ message: 'Token & password required' });
 
