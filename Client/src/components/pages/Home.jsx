@@ -1,7 +1,9 @@
 import './Home.css';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Home = () => {
+  const { t } = useTranslation();
   const scrollCarousel = (direction) => {
     const carousel = document.querySelector('.testimonials-carousel');
     if (carousel) {
@@ -20,18 +22,17 @@ const Home = () => {
             <div className="col-12">
               <div className="hero-content text-center">
                 <h1 className="hero-title animate-fade-in">
-                  <span className="text-white">Affiliate Academy</span>
+                   <span className="text-white">{t("home.hero.title")}</span>
                 </h1>
                 <h2 className="hero-subtitle animate-fade-in-delay">
-                  Information Is <span className="text-success">Wealth</span>
+                      {t("home.hero.subtitle")}
                 </h2>
                 <p className="hero-description animate-fade-in-delay-2">
-                  We are not just a platform; we are a dynamic digital marketplace where dreams
-                  are fueled by knowledge, and success is within reach.
+                  {t("home.hero.description")}
                 </p>
                 <div className="hero-buttons animate-fade-in-delay-3">
                   <Link to="/register" className="btn btn-success btn-lg me-0 me-sm-3 mb-2 mb-sm-3">
-                    Get Started
+                    {t("home.hero.getStarted")}
                   </Link>
                 </div>
               </div>
@@ -43,56 +44,66 @@ const Home = () => {
       {/* Jumbotron Section */}
       <section className="jumbotron-section py-5">
         <div className="container">
-          {/* Main Featured Card */}
+
+          {/* Featured Card */}
           <div className="row mb-4">
             <div className="col-12">
               <div className="featured-card animate-slide-up">
                 <div className="card border-0 shadow-lg overflow-hidden">
                   <div className="row g-0">
+
                     <div className="col-12 col-md-6">
                       <div className="card-img-wrapper">
                         <img 
-                          src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80" 
-                          className="img-fluid h-100 w-100" 
-                          alt="Featured" 
+                          src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80"
+                          className="img-fluid h-100 w-100"
+                          alt="Featured"
                           style={{ objectFit: 'cover', minHeight: '400px' }}
                         />
                         <div className="card-img-overlay-gradient"></div>
                       </div>
                     </div>
+
                     <div className="col-12 col-md-6">
                       <div className="card-body p-4 p-md-5 d-flex flex-column justify-content-center h-100">
-                        <span className="badge bg-success mb-3 align-self-start">Featured</span>
+
+                        <span className="badge bg-success mb-3 align-self-start">
+                          {t("home.hero.featured.badge")}
+                        </span>
+
                         <h2 className="card-title h3 fw-bold mb-3">
-                         Do you want to Make passive Income online by trading information as a commodity??
+                          {t("home.hero.featured.title")}
                         </h2>
+
                         <p className="card-text lead mb-4">
-                          The digital products marketplace where we trade information as a commodity.
-                          Affiliate Academy is a digital products marketplace providing the value that satisfies the information impulses of Customers.
-                          The gap inbetween a desire and it's result is <strong>"KNOWLEDGE"</strong>
+                          {t("home.hero.featured.text")}
                         </p>
+
                         <ul className="list-unstyled mb-4">
                           <li className="mb-2">
                             <i className="bi bi-check-circle-fill text-success me-2"></i>
-                            SignUp
+                            {t("home.hero.featured.list.signup")}
                           </li>
                           <li className="mb-2">
                             <i className="bi bi-check-circle-fill text-success me-2"></i>
-                            Promote
+                            {t("home.hero.featured.list.promote")}
                           </li>
                           <li className="mb-2">
                             <i className="bi bi-check-circle-fill text-success me-2"></i>
-                            Earn
+                            {t("home.hero.featured.list.earn")}
                           </li>
                         </ul>
+
                         <div>
                           <Link to="/register" className="btn btn-success btn-lg w-100 w-sm-auto">
-                            Start Your Journey
+                            {t("home.hero.featured.button")}
                             <i className="bi bi-arrow-right ms-2"></i>
                           </Link>
                         </div>
+
                       </div>
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -101,37 +112,42 @@ const Home = () => {
 
           {/* Two Bottom Cards */}
           <div className="row g-3 g-md-4">
+
             {/* Card 1 */}
             <div className="col-12 col-md-6">
               <div className="info-card animate-slide-up-delay-1">
                 <div className="card border-0 shadow-lg h-100 overflow-hidden hover-lift">
+
                   <div className="card-img-top-wrapper position-relative">
                     <img 
-                      src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80" 
-                      className="card-img-top" 
-                      alt="Analytics" 
+                      src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80"
+                      className="card-img-top"
+                      alt="Analytics"
                       style={{ height: '250px', objectFit: 'cover' }}
                     />
                     <div className="card-img-overlay-dark"></div>
                     <div className="position-absolute top-0 start-0 p-3">
                       <span className="badge bg-success bg-opacity-90">
                         <i className="bi bi-graph-up-arrow me-1"></i>
-                        Analytics
+                        {t("home.hero.featured.badge")}
                       </span>
                     </div>
                   </div>
+
                   <div className="card-body p-4">
                     <div className="card-icon mb-3">
                       <i className="bi bi-bar-chart-line-fill text-success" style={{ fontSize: '2.5rem' }}></i>
                     </div>
-                    <h3 className="card-title h4 fw-bold mb-3">Real-Time Analytics</h3>
+
+                    <h3 className="card-title h4 fw-bold mb-3">
+                      {t("home.hero.card1.title")}
+                    </h3>
+
                     <p className="card-text text-muted">
-                      We Trade varieties of information that provides the knowledge necessary to make dreams,goals,desires happen and happen more quickly.
-                      A Market where knowledge is power and success is unlimited. At Affiliate Academy, we have unlocked the secret to turning desires into reality through the
-                      transformative power of information and real estate. Our mission is clear: to provide you with the tools and resources you need to make your dreams come 
-                      true – faster and with greater ease.
+                      {t("home.hero.card1.text")}
                     </p>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -140,35 +156,43 @@ const Home = () => {
             <div className="col-12 col-md-6">
               <div className="info-card animate-slide-up-delay-2">
                 <div className="card border-0 shadow-lg h-100 overflow-hidden hover-lift">
+
                   <div className="card-img-top-wrapper position-relative">
                     <img 
-                      src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80" 
-                      className="card-img-top" 
-                      alt="Community" 
+                      src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"
+                      className="card-img-top"
+                      alt="Community"
                       style={{ height: '250px', objectFit: 'cover' }}
                     />
                     <div className="card-img-overlay-dark"></div>
                     <div className="position-absolute top-0 start-0 p-3">
                       <span className="badge bg-success bg-opacity-90">
                         <i className="bi bi-people-fill me-1"></i>
-                        Community
+                        {t("home.hero.card2.badge")}
                       </span>
                     </div>
                   </div>
+
                   <div className="card-body p-4">
                     <div className="card-icon mb-3">
                       <i className="bi bi-people-fill text-success" style={{ fontSize: '2.5rem' }}></i>
                     </div>
-                    <h3 className="card-title h4 fw-bold mb-3">Vibrant Community</h3>
+
+                    <h3 className="card-title h4 fw-bold mb-3">
+                      {t("home.hero.card2.title")}
+                    </h3>
+
                     <p className="card-text text-muted">
-                      Do you want to make passive income online by trading information and real estate as commodities? Get ready to experience financial freedom like never before. 
-                      We are proud to offer an exclusive opportunity for our Affiliated Information Traders to embark on a lifetime investment journey with our extra revolutionary "Chain Commission" system.
+                      {t("home.hero.card2.text")}
                     </p>
                   </div>
+
                 </div>
               </div>
             </div>
+
           </div>
+
         </div>
       </section>
 
@@ -209,14 +233,13 @@ const Home = () => {
                         <div className="video-content p-3 p-md-4 p-lg-5 d-flex flex-column justify-content-center h-100">
                           <span className="badge bg-success mb-3 align-self-start">
                             <i className="bi bi-play-btn-fill me-1"></i>
-                            Watch Now
+                            {t("home.video.badge")}
                           </span>
                           <h3 className="h4 fw-bold mb-3">
-                            Discover How to Start Your Journey
+                            {t("home.video.title")}
                           </h3>
                           <p className="text-muted mb-4">
-                            Watch this exclusive video to learn how you can transform your financial future 
-                            through our proven affiliate marketing strategies and information trading system.
+                            {t("home.video.description")}
                           </p>
                         </div>
                       </div>
@@ -237,10 +260,10 @@ const Home = () => {
           <div className="row mb-5">
             <div className="col-12 text-center">
               <h2 className="display-5 fw-bold mb-3 animate-fade-in">
-                Top Selling <span className="text-success">Products</span>
+                {t("home.products.title")} <span className="text-success">{t("home.products.titleHighlight")}</span>
               </h2>
               <p className="lead text-muted animate-fade-in-delay">
-                Discover our most popular digital products and information resources
+                {t("home.products.subtitle")}
               </p>
             </div>
           </div>
@@ -249,7 +272,7 @@ const Home = () => {
           <div className="row g-4">
             {/* Product cards will be added here */}
             <div className="col-12 text-center">
-              <p className="text-muted">COMING SOON...</p>
+              <p className="text-muted">{t("home.products.comingSoon")}</p>
             </div>
           </div>
         </div>
@@ -268,32 +291,31 @@ const Home = () => {
                     <div className="cta-icon mb-4">
                       <i className="bi bi-people-fill text-success" style={{ fontSize: '4rem' }}></i>
                     </div>
-                    <h3 className="h2 fw-bold mb-3">Become an Affiliate</h3>
+                    <h3 className="h2 fw-bold mb-3">{t("home.cta.affiliate.title")}</h3>
                     <p className="lead text-muted mb-4">
-                      Join our affiliate program and start earning commissions by promoting our digital products. 
-                      Turn your network into income with our proven system.
+                      {t("home.cta.affiliate.description")}
                     </p>
                     <ul className="list-unstyled text-start mb-4">
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Earn generous commissions
+                        {t("home.cta.affiliate.benefits.commissions")}
                       </li>
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Access marketing materials
+                        {t("home.cta.affiliate.benefits.materials")}
                       </li>
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Real-time tracking & analytics
+                        {t("home.cta.affiliate.benefits.analytics")}
                       </li>
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Dedicated support team
+                        {t("home.cta.affiliate.benefits.support")}
                       </li>
                     </ul>
                     <Link to="/affiliate" className="btn btn-success btn-lg w-100">
                       <i className="bi bi-person-plus-fill me-2"></i>
-                      Become an Affiliate
+                      {t("home.cta.affiliate.button")}
                     </Link>
                   </div>
                   <div className="card-decoration"></div>
@@ -309,28 +331,26 @@ const Home = () => {
                     <div className="cta-icon mb-4">
                       <i className="bi bi-cart-fill text-success" style={{ fontSize: '4rem' }}></i>
                     </div>
-                    <h3 className="h2 fw-bold mb-3">Shop as a Customer</h3>
+                    <h3 className="h2 fw-bold mb-3">{t("home.cta.customer.title")}</h3>
                     <p className="lead text-muted mb-4">
-                     Customers are the reason why Affiliate Academy exists. They are the seekers, the learners,
-                      the ones eager to transform their lives through valuable information. By browsing our diverse marketplace, 
-                      customers can discover a treasure trove of digital products tailored to their needs and interests. 
+                      {t("home.cta.customer.description")}
                     </p>
                     <ul className="list-unstyled text-start mb-4">
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Premium digital products
+                        {t("home.cta.customer.benefits.premium")}
                       </li>
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Instant access after purchase
+                        {t("home.cta.customer.benefits.instant")}
                       </li>
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Lifetime updates & support
+                        {t("home.cta.customer.benefits.lifetime")}
                       </li>
                       <li className="mb-2">
                         <i className="bi bi-check-circle-fill text-success me-2"></i>
-                        Money-back guarantee
+                        {t("home.cta.customer.benefits.guarantee")}
                       </li>
                     </ul>
                     {/* <a href="/register" className="btn btn-success btn-lg w-100">
@@ -353,10 +373,10 @@ const Home = () => {
           <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-8 text-center">
               <h2 className="display-5 fw-bold mb-3 animate-fade-in">
-                Frequently Asked <span className="text-success">Questions</span>
+                {t("home.faq.title")} <span className="text-success">{t("home.faq.titleHighlight")}</span>
               </h2>
               <p className="lead text-muted animate-fade-in-delay">
-                Find answers to common questions about Affiliate Academy.
+                {t("home.faq.subtitle")}
               </p>
             </div>
           </div>
@@ -367,110 +387,110 @@ const Home = () => {
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    What is Affiliate Academy?
+                    {t("home.faq.items.q1.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    Affiliate Academy is a dynamic digital marketplace where information is traded as a commodity. It's a platform designed to help you unlock financial freedom through affiliate marketing and digital product sales.
+                    {t("home.faq.items.q1.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    How can I become a vendor on Affiliate Academy?
+                    {t("home.faq.items.q2.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    To become a vendor on Affiliate Academy, you need to sign up on our platform, complete the vendor registration process, and submit your digital products for approval. Our team will review your products and guide you through the next steps.
+                    {t("home.faq.items.q2.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    What are the benefits of being a vendor on Affiliate Academy?
+                    {t("home.faq.items.q3.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    As a vendor, you'll enjoy access to a large customer base, real-time analytics, marketing support, secure payment processing, and the opportunity to scale your business through our affiliate network.
+                    {t("home.faq.items.q3.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    How do affiliates earn commissions on Affiliate Academy?
+                    {t("home.faq.items.q4.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    Affiliates earn commissions by promoting vendor products through their unique affiliate links. Each successful sale generates a commission that's automatically tracked and paid to the affiliate according to our commission structure.
+                    {t("home.faq.items.q4.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    How can I contact customer support on Affiliate Academy?
+                    {t("home.faq.items.q5.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    You can reach our customer support team through multiple channels: email support, live chat on our website, or through your account dashboard. We typically respond within 24-48 hours.
+                    {t("home.faq.items.q5.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    What does Affiliate Academy do?
+                    {t("home.faq.items.q6.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    Affiliate Academy operates as a comprehensive digital marketplace that connects vendors with affiliates and customers. We facilitate the buying, selling, and promotion of digital products while providing tools for tracking, analytics, and payment processing.
+                    {t("home.faq.items.q6.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    Are there any restrictions on the type of products that can be uploaded on Affiliate Academy?
+                    {t("home.faq.items.q7.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    We accept most digital products, but we do have guidelines. Products must be legal, non-fraudulent, and comply with our content policy. We don't allow products that violate copyright, contain malware, or promote illegal activities.
+                    {t("home.faq.items.q7.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    What is the process for resolving disputes between vendors and affiliates on Affiliate Academy?
+                    {t("home.faq.items.q8.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    We have a dedicated dispute resolution team that handles conflicts fairly. Both parties can submit their evidence and claims through the resolution center. We investigate thoroughly and make decisions based on our platform policies and evidence provided.
+                    {t("home.faq.items.q8.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    Is there a specific timeframe for vendors to receive their commissions on Affiliate Academy?
+                    {t("home.faq.items.q9.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    Commissions are typically processed and paid out within 30 days of the transaction. However, vendors can check their real-time earnings dashboard anytime to track pending and completed commissions.
+                    {t("home.faq.items.q9.answer")}
                   </p>
                 </details>
 
                 <details className="faq-item animate-fade-in">
                   <summary className="faq-question">
                     <i className="bi bi-question-circle-fill me-2 text-success"></i>
-                    Can I promote products from multiple Vendors as an affiliate on Affiliate Academy?
+                    {t("home.faq.items.q10.question")}
                     <i className="bi bi-chevron-down ms-auto"></i>
                   </summary>
                   <p className="faq-answer">
-                    Absolutely! As an affiliate, you can promote products from multiple vendors. This allows you to diversify your income streams and offer a wider variety of products to your audience.
+                    {t("home.faq.items.q10.answer")}
                   </p>
                 </details>
               </div>
@@ -481,11 +501,11 @@ const Home = () => {
           <div className="row justify-content-center mt-5">
             <div className="col-12 col-lg-8 text-center">
               <div className="support-cta p-4 rounded-3 bg-light">
-                <h4 className="fw-bold mb-2">Still have questions?</h4>
-                <p className="text-muted mb-3">Our support team is here to help you. Reach out to us anytime.</p>
+                <h4 className="fw-bold mb-2">{t("home.faq.support.heading")}</h4>
+                <p className="text-muted mb-3">{t("home.faq.support.description")}</p>
                 <Link to="/contact" className="btn btn-success">
                   <i className="bi bi-envelope-fill me-2"></i>
-                  Contact Support
+                  {t("home.faq.support.button")}
                 </Link>
               </div>
             </div>
@@ -500,10 +520,10 @@ const Home = () => {
           <div className="row justify-content-center mb-5">
             <div className="col-12 col-lg-8 text-center">
               <h2 className="display-5 fw-bold mb-3 animate-fade-in">
-                What Our <span className="text-success">Community Says</span>
+                {t("home.testimonials.title")} <span className="text-success">{t("home.testimonials.titleHighlight")}</span>
               </h2>
               <p className="lead text-muted animate-fade-in-delay">
-                Real stories from real people making passive income on Affiliate Academy
+                {t("home.testimonials.subtitle")}
               </p>
             </div>
           </div>
@@ -530,10 +550,10 @@ const Home = () => {
                         <i className="bi bi-star-fill text-warning"></i>
                       </div>
                       <p className="card-text mb-4">
-                        "Affiliate Academy has completely transformed my income streams. The platform is so intuitive and the support team is amazing. I've earned more in 3 months than I expected in a year!"
+                        "{t("home.testimonials.items.t1.text")}"
                       </p>
-                      <h5 className="fw-bold mb-1">Sarah Johnson</h5>
-                      <p className="text-muted small">Digital Marketer & Affiliate</p>
+                      <h5 className="fw-bold mb-1">{t("home.testimonials.items.t1.name")}</h5>
+                      <p className="text-muted small">{t("home.testimonials.items.t1.role")}</p>
                     </div>
                   </div>
                 </div>
@@ -557,10 +577,10 @@ const Home = () => {
                         <i className="bi bi-star-fill text-warning"></i>
                       </div>
                       <p className="card-text mb-4">
-                        "As a vendor, this platform has given me access to thousands of potential customers. The commission structure is fair and the tracking system is spot on. Highly recommended!"
+                        "{t("home.testimonials.items.t2.text")}"
                       </p>
-                      <h5 className="fw-bold mb-1">Marcus Williams</h5>
-                      <p className="text-muted small">Content Creator & Vendor</p>
+                      <h5 className="fw-bold mb-1">{t("home.testimonials.items.t2.name")}</h5>
+                      <p className="text-muted small">{t("home.testimonials.items.t2.role")}</p>
                     </div>
                   </div>
                 </div>
@@ -584,10 +604,10 @@ const Home = () => {
                         <i className="bi bi-star-fill text-warning"></i>
                       </div>
                       <p className="card-text mb-4">
-                        "The chain commission system is revolutionary! I can earn from multiple levels of referrals. This is the best passive income opportunity I've found."
+                        "{t("home.testimonials.items.t3.text")}"
                       </p>
-                      <h5 className="fw-bold mb-1">Amara Okafor</h5>
-                      <p className="text-muted small">Business Coach & Affiliate</p>
+                      <h5 className="fw-bold mb-1">{t("home.testimonials.items.t3.name")}</h5>
+                      <p className="text-muted small">{t("home.testimonials.items.t3.role")}</p>
                     </div>
                   </div>
                 </div>
