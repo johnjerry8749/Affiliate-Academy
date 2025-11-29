@@ -13,7 +13,11 @@ import {
     getAllCourses,
     createCourse,
     updateCourse,
-    deleteCourse
+    deleteCourse,
+    linkVideoToCourse,
+    unlinkVideoFromCourse,
+    getCourseWithVideo,
+    syncVideoStatus
 } from '../controller/courseController.js';
 
 // Initialize admin router for all admin-specific routes
@@ -100,10 +104,39 @@ Adminrouter.put('/course/:id', verifyAdminToken, updateCourse);
 
 /**
  * DELETE /api/admin/course/:id
- * Deletes a course from the system
+ * Deletes a course from the system (includes Bunny video cleanup)
  * :id - The unique identifier of the course to delete
  */
 Adminrouter.delete('/course/:id', verifyAdminToken, deleteCourse);
+
+// =============================================
+// VIDEO MANAGEMENT ROUTES
+// =============================================
+
+/**
+ * GET /api/admin/course/:id/video
+ * Get course with detailed video information
+ */
+Adminrouter.get('/course/:id/video', verifyAdminToken, getCourseWithVideo);
+
+/**
+ * POST /api/admin/course/:courseId/video/link
+ * Link existing Bunny video to course
+ * Body: { videoId: string, title?: string }
+ */
+Adminrouter.post('/course/:courseId/video/link', verifyAdminToken, linkVideoToCourse);
+
+/**
+ * DELETE /api/admin/course/:courseId/video/unlink
+ * Unlink video from course (removes metadata from Supabase)
+ */
+Adminrouter.delete('/course/:courseId/video/unlink', verifyAdminToken, unlinkVideoFromCourse);
+
+/**
+ * POST /api/admin/course/:courseId/video/sync
+ * Sync video status from Bunny to Supabase
+ */
+Adminrouter.post('/course/:courseId/video/sync', verifyAdminToken, syncVideoStatus);
 
 // Export the configured admin router for use in main application
 export default Adminrouter;

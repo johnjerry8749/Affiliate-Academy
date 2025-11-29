@@ -3,10 +3,11 @@ import AdminSidebar from '../adminLayout/AdminSidebar';
 import Smallfooter from '../../Users/UserLayout/smallfooter';
 import { supabase } from '../../../../supabase';
 import { uploadcourse, fetchCourses as fetchCoursesAPI, updateCourse, deleteCourse } from '../../../api/adminApi';
+import bunnyService from '../../../services/bunnyService';
 
 /**
- * Video uploads are handled through Supabase Storage directly.
- * Ensure you have a 'videos' bucket created in Supabase Storage.
+ * Video uploads and streaming are handled through Bunny CDN directly.
+ * Videos are automatically transcoded and delivered via CDN.
  */
 
 const CourseManagement = () => {
@@ -18,6 +19,9 @@ const CourseManagement = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [bunnyVideos, setBunnyVideos] = useState([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [selectedVideoId, setSelectedVideoId] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -25,7 +29,9 @@ const CourseManagement = () => {
     commission: '',
     features: '',
     status: 'active',
-    course_video: ''
+    course_video: '',
+    video_id: '',
+    video_thumbnail: ''
   });
 
   // Live Alert Function
@@ -77,6 +83,24 @@ const CourseManagement = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fetch videos from Bunny CDN
+  const fetchBunnyVideos = async () => {
+    try {
+      setLoadingVideos(true);
+      const videoData = await bunnyService.getVideos(1, 100);
+      setBunnyVideos(videoData.items || []);
+    } catch (error) {
+      console.error('Error fetching Bunny videos:', error);
+      showLiveAlert('Failed to load videos from Bunny CDN', 'danger');
+    } finally {
+      setLoadingVideos(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBunnyVideos();
+  }, []);
+
   const fetchCourses = async () => {
     try {
       setLoading(true);
@@ -109,9 +133,9 @@ const CourseManagement = () => {
     if (!file) return;
 
     // Validate file type
-    const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
     if (!validTypes.includes(file.type)) {
-      showLiveAlert('Please upload a valid video file (MP4, WebM, OGG, or MOV)', 'danger');
+      showLiveAlert('Please upload a valid video file (MP4, WebM, OGG, MOV, AVI, or MKV)', 'danger');
       return;
     }
 
@@ -124,31 +148,25 @@ const CourseManagement = () => {
 
     try {
       setUploading(true);
-
-      // Create unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `course-videos/${fileName}`;
-
-      // Upload to Supabase Storage (kept for video storage only)
-      const { error } = await supabase.storage
-        .from('videos')
-        .upload(filePath, file);
-
-      if (error) throw error;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(filePath);
-
-      // Update form data with video URL
+      
+      // Generate title from filename
+      const title = file.name.split('.')[0];
+      
+      // Upload to Bunny CDN
+      const videoData = await bunnyService.uploadVideo(file, title);
+      
+      // Update form data with video information
       setFormData(prev => ({
         ...prev,
-        course_video: publicUrl
+        course_video: videoData.streamUrl,
+        video_id: videoData.videoId,
+        video_thumbnail: videoData.thumbnail
       }));
-
-      showLiveAlert('Video uploaded successfully!', 'success');
+      
+      showLiveAlert('Video uploaded successfully to Bunny CDN!', 'success');
+      
+      // Refresh video list
+      fetchBunnyVideos();
     } catch (error) {
       console.error('Error uploading video:', error);
       showLiveAlert('Failed to upload video: ' + error.message, 'danger');
@@ -156,6 +174,23 @@ const CourseManagement = () => {
       setUploading(false);
     }
   };
+
+  // Handle video selection from existing Bunny videos
+  const handleVideoSelect = (videoId) => {
+    const selectedVideo = bunnyVideos.find(video => video.guid === videoId);
+    if (selectedVideo) {
+      setFormData(prev => ({
+        ...prev,
+        course_video: bunnyService.getStreamUrl(videoId),
+        video_id: videoId,
+        video_thumbnail: bunnyService.getThumbnailUrl(videoId)
+      }));
+      setSelectedVideoId(videoId);
+      showLiveAlert('Video selected successfully!', 'success');
+    }
+  };
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -184,13 +219,16 @@ const CourseManagement = () => {
         price: formData.price ? parseFloat(formData.price) : 0,
         features: featuresArray,
         status: formData.status,
-        image_url: formData.image_url,
-        course_url: formData.course_url,
-        course_video: formData.course_video,
+        image_url: formData.image_url || '',
+        course_url: formData.course_url || '',
+        course_video: formData.course_video || '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
+      // Debug: Log the course data being sent
+      console.log('Sending course data:', courseData);
+      
       // Use axios API to upload course
       await uploadcourse(courseData, token);
 
@@ -203,12 +241,16 @@ const CourseManagement = () => {
         price: '',
         features: '',
         status: 'active',
-        course_video: ''
+        course_video: '',
+        video_id: '',
+        video_thumbnail: ''
       });
+      setSelectedVideoId('');
       setShowAddForm(false);
       fetchCourses();
     } catch (error) {
       console.error('Error adding course:', error);
+      console.error('Error details:', error.response?.data);
       showLiveAlert('Failed to add course: ' + error.message, 'danger');
     } finally {
       setLoading(false);
@@ -224,8 +266,11 @@ const CourseManagement = () => {
       commission: course.commission || '',
       features: Array.isArray(course.features) ? course.features.join('\n') : '',
       status: course.status || 'active',
-      course_video: course.course_video || ''
+      course_video: course.course_video || '',
+      video_id: course.video_id || '',
+      video_thumbnail: course.video_thumbnail || ''
     });
+    setSelectedVideoId(course.video_id || '');
     setShowEditModal(true);
   };
 
@@ -274,7 +319,9 @@ const CourseManagement = () => {
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    if (!window.confirm('Are you sure you want to delete this course? This will also permanently delete any associated video.')) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -284,6 +331,30 @@ const CourseManagement = () => {
         return;
       }
 
+      // Find the course to get its video information
+      const courseToDelete = courses.find(course => course.id === courseId);
+      
+      // If course has a video, delete it from Bunny first
+      if (courseToDelete && courseToDelete.course_video) {
+        try {
+          // Extract video ID from the Bunny CDN URL
+          // URL format: https://vz-71b67f06-1c7.b-cdn.net/VIDEO_ID/playlist.m3u8
+          const videoUrl = courseToDelete.course_video;
+          const videoIdMatch = videoUrl.match(/\/([^/]+)\/playlist\.m3u8$/);
+          const videoId = videoIdMatch ? videoIdMatch[1] : null;
+          
+          if (videoId) {
+            console.log('Deleting video from Bunny CDN:', videoId);
+            await bunnyService.deleteVideo(videoId);
+            showLiveAlert('Video deleted from Bunny CDN...', 'info');
+          }
+        } catch (videoError) {
+          console.error('Failed to delete video from Bunny:', videoError);
+          showLiveAlert('Warning: Could not delete video from Bunny CDN, but continuing with course deletion', 'warning');
+        }
+      }
+
+      // Delete the course from database
       await deleteCourse(courseId, token);
       showLiveAlert('Course deleted successfully!', 'success');
       fetchCourses();
@@ -342,8 +413,11 @@ const CourseManagement = () => {
                       price: '',
                       features: '',
                       status: 'active',
-                      course_video: ''
+                      course_video: '',
+                      video_id: '',
+                      video_thumbnail: ''
                     });
+                    setSelectedVideoId('');
                   }
                   setShowAddForm(!showAddForm);
                 }}
@@ -443,31 +517,48 @@ const CourseManagement = () => {
                     {/* Video Upload */}
                     <div className="col-12">
                       <label className="form-label" style={{ color: '#000' }}>Course Video <span className="text-danger">*</span></label>
-                      <input
-                        type="file"
-                        className="form-control"
-                        accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                        onChange={handleVideoUpload}
-                        disabled={uploading}
-                        style={{ backgroundColor: '#fff', color: '#000' }}
-                      />
-                      <small className="text-muted d-block mt-1">
-                        Upload video file (MP4, WebM, OGG, MOV - Max 500MB). This video will be displayed when users access the course.
-                      </small>
+                      
+                      {/* Upload new video */}
+                      <div className="mb-3">
+                        <label className="form-label small" style={{ color: '#666' }}>Upload New Video</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
+                          onChange={handleVideoUpload}
+                          disabled={uploading}
+                          style={{ backgroundColor: '#fff', color: '#000' }}
+                        />
+                        <small className="text-muted d-block mt-1">
+                          Upload video file (MP4, WebM, OGG, MOV, AVI, MKV - Max 500MB). Video will be streamed via Bunny CDN.
+                        </small>
+                      </div>
+
+
+
                       {uploading && (
                         <div className="mt-2">
                           <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
                             <span className="visually-hidden">Uploading...</span>
                           </div>
-                          <small className="text-primary">Uploading video...</small>
+                          <small className="text-primary">Uploading to Bunny CDN...</small>
                         </div>
                       )}
                       {formData.course_video && !uploading && (
                         <div className="mt-2">
                           <small className="text-success">
                             <i className="bi bi-check-circle-fill me-1"></i>
-                            Video uploaded successfully
+                            Video ready for streaming via Bunny CDN
                           </small>
+                          {formData.video_thumbnail && (
+                            <div className="mt-2">
+                              <img 
+                                src={formData.video_thumbnail} 
+                                alt="Video thumbnail" 
+                                style={{ maxWidth: '200px', borderRadius: '8px' }}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -620,7 +711,7 @@ const CourseManagement = () => {
                               </button>
                               <button 
                                 className="btn btn-sm btn-outline-danger" 
-                                title="Delete"
+                                title="Delete Course"
                                 onClick={() => handleDeleteCourse(course.id)}
                               >
                                 <i className="bi bi-trash"></i>
@@ -752,30 +843,71 @@ const CourseManagement = () => {
                 {/* Video Upload */}
                 <div className="col-12">
                   <label className="form-label">Course Video</label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                    onChange={handleVideoUpload}
-                    disabled={uploading}
-                  />
-                  <small className="text-muted d-block mt-1">
-                    Upload new video file (MP4, WebM, OGG, MOV - Max 500MB) or keep existing video.
-                  </small>
+                  
+                  {/* Upload new video */}
+                  <div className="mb-3">
+                    <label className="form-label small" style={{ color: '#666' }}>Upload New Video</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
+                      onChange={handleVideoUpload}
+                      disabled={uploading}
+                    />
+                    <small className="text-muted d-block mt-1">
+                      Upload video file (MP4, WebM, OGG, MOV, AVI, MKV - Max 500MB). Video will be streamed via Bunny CDN.
+                    </small>
+                  </div>
+
+                  {/* Select existing video */}
+                  <div className="mb-3">
+                    <label className="form-label small" style={{ color: '#666' }}>Or Select Existing Video</label>
+                    <select
+                      className="form-control"
+                      value={selectedVideoId}
+                      onChange={(e) => handleVideoSelect(e.target.value)}
+                      disabled={uploading || loadingVideos}
+                    >
+                      <option value="">Choose from Bunny CDN videos...</option>
+                      {bunnyVideos.map(video => (
+                        <option key={video.guid} value={video.guid}>
+                          {video.title} ({Math.floor(video.length / 60)}:{(video.length % 60).toString().padStart(2, '0')})
+                        </option>
+                      ))}
+                    </select>
+                    {loadingVideos && (
+                      <small className="text-muted d-block mt-1">
+                        <i className="bi bi-hourglass-split me-1"></i>
+                        Loading videos...
+                      </small>
+                    )}
+                  </div>
+
                   {uploading && (
                     <div className="mt-2">
                       <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
                         <span className="visually-hidden">Uploading...</span>
                       </div>
-                      <small className="text-primary">Uploading video...</small>
+                      <small className="text-primary">Uploading to Bunny CDN...</small>
                     </div>
                   )}
                   {formData.course_video && !uploading && (
                     <div className="mt-2">
-                      <small className="text-success">
-                        <i className="bi bi-check-circle-fill me-1"></i>
-                        Video available
-                      </small>
+                      <div className="d-flex justify-content-between align-items-start">
+                        <small className="text-success">
+                          <i className="bi bi-check-circle-fill me-1"></i>
+                          Video ready for streaming via Bunny CDN
+                        </small>
+                      </div>
+                      {formData.video_thumbnail && (
+                        <div className="mt-2">
+                          <img 
+                            src={formData.video_thumbnail} 
+                            alt="Video thumbnail" 
+                            style={{ maxWidth: '150px', borderRadius: '8px' }}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
