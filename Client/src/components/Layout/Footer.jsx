@@ -14,6 +14,7 @@ const Footer = () => {
           <div className="col-lg-4 col-md-6 animate-slide-up">
             <h3 className="mb-3 footer-brand">
               <span className="text-success">Affiliate</span> Academy
+               <img src='logo.png' alt="affliate"  width={70} />
             </h3>
             <p className="text-muted mb-3">
               {t('home.footer.tagline1')}pp
