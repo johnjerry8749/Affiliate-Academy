@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthProvider';
 import './Login.css';
 
 const Login = () => {
-  const { login } = useAuth();           // This now checks `paid` status
+  const { login } = useAuth();           
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({

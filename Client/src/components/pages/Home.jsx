@@ -211,14 +211,6 @@ const Home = () => {
                       <div className="col-12 col-lg-7">
                         <div className="video-wrapper">
                           <div className="ratio ratio-16x9">
-                            {/* Replace src with your video URL */}
-                            {/* <iframe
-                              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                              title="Advertisement Video"
-                              allowFullScreen
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              className="video-frame"
-                            ></iframe> */}
                             <video src="./affiliatevideo.mp4" controls></video>
                           </div>
                           <div className="video-overlay">
