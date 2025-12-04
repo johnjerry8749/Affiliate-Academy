@@ -184,7 +184,9 @@ const Register = () => {
         {!showPaymentScreen && (
           <div className="register-card">
             <div className="register-header">
-              <div className="logo-section"><i className="bi bi-person-plus"></i></div>
+              <div className="logo-section">
+                <img src='logo.png' alt="affliate"  width={70} />
+              </div>
               <h1>Create Account</h1>
               <p>Join Affiliate Academy and start your journey</p>
             </div>

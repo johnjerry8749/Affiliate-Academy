@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../adminLayout/AdminSidebar';
 import Smallfooter from '../../Users/UserLayout/smallfooter';
-import { supabase } from '../../../../supabase';
+// import { supabase } from '../../../../supabase';
 import { uploadcourse, fetchCourses as fetchCoursesAPI, updateCourse, deleteCourse } from '../../../api/adminApi';
 import bunnyService from '../../../services/bunnyService';
 
