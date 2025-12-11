@@ -128,6 +128,85 @@ useEffect(() => {
     }
   };
 
+  // Create balance records for users who don't have them
+  const ensureUserBalanceExists = async (user) => {
+    try {
+      // Check if balance record already exists
+      const { data: existingBalance } = await supabase
+        .from('user_balances')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!existingBalance) {
+        // Create new balance record with user's currency
+        const { error } = await supabase.from('user_balances').insert({
+          user_id: user.id,
+          available_balance: 0,
+          pending_balance: 0,
+          total_earned: 0,
+          total_withdrawn: 0,
+          currency: user.currency || 'USD',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+        if (error) {
+          console.error('Error creating balance record:', error);
+          showLiveAlert(`Failed to create balance record for ${user.full_name}`, 'danger');
+        } else {
+          showLiveAlert(`Balance record created for ${user.full_name}`, 'success');
+        }
+      }
+    } catch (error) {
+      console.error('Error ensuring balance exists:', error);
+    }
+  };
+
+  // Create balance records for all users without them
+  const ensureAllUsersHaveBalance = async () => {
+    if (!window.confirm('This will create balance records for all users who don\'t have them. Continue?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      let createdCount = 0;
+      
+      for (const user of users) {
+        const { data: existingBalance } = await supabase
+          .from('user_balances')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!existingBalance) {
+          const { error } = await supabase.from('user_balances').insert({
+            user_id: user.id,
+            available_balance: 0,
+            pending_balance: 0,
+            total_earned: 0,
+            total_withdrawn: 0,
+            currency: user.currency || 'USD',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+          if (!error) {
+            createdCount++;
+          }
+        }
+      }
+
+      showLiveAlert(`Created balance records for ${createdCount} users`, 'success');
+    } catch (error) {
+      console.error('Error creating balance records:', error);
+      showLiveAlert('Failed to create balance records', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSendMail = (user) => {
     setSelectedUser(user);
     setShowSendMailModal(true);
@@ -136,6 +215,9 @@ useEffect(() => {
 
   const handleEditBalance = async (user) => {
     setSelectedUser(user);
+
+    // First ensure the user has a balance record
+    await ensureUserBalanceExists(user);
 
     // Fetch existing balance data
     try {
@@ -151,7 +233,7 @@ useEffect(() => {
           pending_balance: balanceData.pending_balance || 0,
           total_earned: balanceData.total_earned || 0,
           total_withdrawn: balanceData.total_withdrawn || 0,
-          currency: balanceData.currency || user.currency,
+          currency: balanceData.currency || user.currency || 'USD',
         });
       } else {
         // Set default values if no balance record exists, use user's currency if available
@@ -160,7 +242,7 @@ useEffect(() => {
           pending_balance: 0,
           total_earned: 0,
           total_withdrawn: 0,
-          currency: user.currency,
+          currency: user.currency || 'USD',
         });
       }
     } catch (error) {
@@ -171,7 +253,7 @@ useEffect(() => {
         pending_balance: 0,
         total_earned: 0,
         total_withdrawn: 0,
-        currency: user.currency,
+        currency: user.currency || 'USD',
       });
     }
 
@@ -427,6 +509,17 @@ const confirmDelete = async () => {
                     onChange={handleSearch}
                   />
                 </div>
+              </div>
+              <div className="col-lg-6 d-flex justify-content-end">
+                <button 
+                  className="btn btn-outline-primary"
+                  onClick={ensureAllUsersHaveBalance}
+                  disabled={loading}
+                  title="Create balance records for users who don't have them"
+                >
+                  <i className="bi bi-wallet me-2"></i>
+                  Ensure Balance Records
+                </button>
               </div>
             </div>
 

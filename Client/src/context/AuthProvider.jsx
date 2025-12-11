@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }) => {
     if (!authData.user) throw new Error('No user');
 
     // Persist user profile in `users` table including `paid`, `role`, and `referrer_id`
-    await supabase.from('users').insert({
+    const { error: userError } = await supabase.from('users').insert({
       id: authData.user.id,
       full_name: fullName,
       email,
@@ -102,11 +102,24 @@ export const AuthProvider = ({ children }) => {
       referrer_id: referralCode || null, // Save referrer_id for commission processing
     });
 
-    await supabase.from('user_balances').insert({
+    if (userError) throw userError;
+
+    // Create user balance record for admin management
+    const { error: balanceError } = await supabase.from('user_balances').insert({
       user_id: authData.user.id,
       available_balance: 0,
       pending_balance: 0,
+      total_earned: 0,
+      total_withdrawn: 0,
+      currency: countries.find(c => c.code === country)?.currency ?? 'USD',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
+
+    if (balanceError) {
+      console.error('Failed to create user balance record:', balanceError);
+      // Don't throw error here to avoid blocking registration, but log it
+    }
 
     // Referral logic (unchanged)
     if (referralCode) {
