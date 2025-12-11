@@ -41,6 +41,7 @@ const Nav = () => {
         <Link className="navbar-brand fw-bold fs-4 brand-animated" to="/" onClick={closeMenu}>
           <span className="text-success brand-text">Affiliate</span>
           <span className="text-white brand-text"> Academy</span>
+          <img src='logo.png' alt="affliate"  width={70} />
         </Link>
 
         {/* Animated Mobile Toggle Button */}
