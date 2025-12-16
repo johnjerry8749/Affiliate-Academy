@@ -274,3 +274,89 @@ export const demoteAdmin = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const ensureUserBalance = async (req, res) => {
+  const { id: userId } = req.params;
+  console.log('ensureUserBalance for userId:', userId); 
+
+  try {
+    // Check if exists
+    let existing = null;
+    try {
+      const result = await supabase.from('user_balances').select('user_id').eq('user_id', userId).single();
+      existing = result.data;
+    } catch (checkError) {
+      if (checkError.code !== 'PGRST116') { // Not "no rows found"
+        throw checkError;
+      }
+      // No balance exists, existing remains null
+    }
+
+    if (existing) {
+      return res.json({ message: 'Balance already exists' });
+    }
+
+    // Get user currency
+    const { data: user } = await supabase.from('users').select('currency').eq('id', userId).single();
+
+    const currency = user?.currency || 'USD';
+
+    // Insert
+    const { error } = await supabase.from('user_balances').insert({
+      user_id: userId,
+      available_balance: 0,
+      pending_balance: 0,
+      total_earned: 0,
+      total_withdrawn: 0,
+      currency,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    if (error) throw error;
+
+    res.json({ message: 'Balance created' });
+  } catch (err) {
+    console.error('ensureUserBalance error:', err);
+    res.status(500).json({ error: 'Failed to ensure balance' });
+  }
+};
+
+export const updateUserBalance = async (req, res) => {
+  const { id: userId } = req.params;
+  const { available_balance, pending_balance, total_earned, total_withdrawn, currency } = req.body;
+
+  try {
+    // Check if balance exists
+    let existing = null;
+    try {
+      const result = await supabase.from('user_balances').select('user_id').eq('user_id', userId).single();
+      existing = result.data;
+    } catch (checkError) {
+      if (checkError.code === 'PGRST116') { // No rows found
+        return res.status(404).json({ error: 'Balance record not found' });
+      }
+      throw checkError;
+    }
+
+    // Update the balance
+    const { error } = await supabase
+      .from('user_balances')
+      .update({
+        available_balance: parseFloat(available_balance) || 0,
+        pending_balance: parseFloat(pending_balance) || 0,
+        total_earned: parseFloat(total_earned) || 0,
+        total_withdrawn: parseFloat(total_withdrawn) || 0,
+        currency: currency || 'USD',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    res.json({ message: 'Balance updated successfully' });
+  } catch (err) {
+    console.error('updateUserBalance error:', err);
+    res.status(500).json({ error: 'Failed to update balance' });
+  }
+};

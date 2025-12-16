@@ -97,6 +97,30 @@ export const fetchDashboardDataFromBackend = async (token) => {
   }
 };
 
+export const ensureUserBalance = async (userId, token) => {
+  try {
+    const res = await axiosInstance.post(`/api/admin/users/${userId}/ensure-balance`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data;
+  } catch (error) {
+    console.error('ensureUserBalance error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || 'Failed to ensure user balance');
+  }
+};
+
+export const updateUserBalance = async (userId, token, balanceData) => {
+  try {
+    const res = await axiosInstance.put(`/api/admin/users/${userId}/update-balance`, balanceData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data;
+  } catch (error) {
+    console.error('updateUserBalance error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || 'Failed to update user balance');
+  }
+};
+
 
 
 export const fetchAdminsList = async (token) => {

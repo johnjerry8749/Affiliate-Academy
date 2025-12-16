@@ -215,7 +215,6 @@ export const verifyPaystack = async (req, res) => {
           const { error: insertError } = await supabase
             .from('user_balances')
             .insert({
-              id: crypto.randomUUID(),
               user_id: referrerId,
               available_balance: referrerTotal,
               pending_balance: 0,

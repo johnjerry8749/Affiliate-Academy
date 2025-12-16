@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../adminLayout/AdminSidebar';
 import Smallfooter from '../../Users/UserLayout/smallfooter';
 import { supabase } from '../../../../supabase';
-import { fetchUsersList , deleteUserById} from '../../../api/adminApi';
+import { fetchUsersList , deleteUserById, ensureUserBalance, updateUserBalance} from '../../../api/adminApi';
 
 
 
@@ -131,35 +131,11 @@ useEffect(() => {
   // Create balance records for users who don't have them
   const ensureUserBalanceExists = async (user) => {
     try {
-      // Check if balance record already exists
-      const { data: existingBalance } = await supabase
-        .from('user_balances')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!existingBalance) {
-        // Create new balance record with user's currency
-        const { error } = await supabase.from('user_balances').insert({
-          user_id: user.id,
-          available_balance: 0,
-          pending_balance: 0,
-          total_earned: 0,
-          total_withdrawn: 0,
-          currency: user.currency || 'USD',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        if (error) {
-          console.error('Error creating balance record:', error);
-          showLiveAlert(`Failed to create balance record for ${user.full_name}`, 'danger');
-        } else {
-          showLiveAlert(`Balance record created for ${user.full_name}`, 'success');
-        }
-      }
+      await ensureUserBalance(user.id, token);
+      showLiveAlert(`Balance record ensured for ${user.full_name}`, 'success');
     } catch (error) {
       console.error('Error ensuring balance exists:', error);
+      showLiveAlert(`Failed to ensure balance record for ${user.full_name}: ${error.message}`, 'danger');
     }
   };
 
@@ -325,41 +301,15 @@ useEffect(() => {
     }
 
     try {
-      // Check if user has a balance record
-      const { data: existingBalance } = await supabase
-        .from('user_balances')
-        .select('*')
-        .eq('user_id', selectedUser.id)
-        .single();
-
       const balanceData = {
         available_balance: parseFloat(editedBalanceInfo.available_balance) || 0,
         pending_balance: parseFloat(editedBalanceInfo.pending_balance) || 0,
         total_earned: parseFloat(editedBalanceInfo.total_earned) || 0,
         total_withdrawn: parseFloat(editedBalanceInfo.total_withdrawn) || 0,
         currency: editedBalanceInfo.currency || 'USD',
-        updated_at: new Date().toISOString(),
       };
 
-      if (existingBalance) {
-        // Update existing balance
-        const { error } = await supabase
-          .from('user_balances')
-          .update(balanceData)
-          .eq('user_id', selectedUser.id);
-
-        if (error) throw error;
-      } else {
-        // Create new balance record
-        const { error } = await supabase
-          .from('user_balances')
-          .insert({
-            user_id: selectedUser.id,
-            ...balanceData,
-          });
-
-        if (error) throw error;
-      }
+      await updateUserBalance(selectedUser.id, token, balanceData);
 
       showLiveAlert('Balance updated successfully!', 'success');
       setShowEditBalanceModal(false);
