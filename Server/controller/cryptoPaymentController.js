@@ -486,6 +486,51 @@ export const updateCryptoPaymentStatus = async (req, res) => {
         }
       }
 
+      // Ensure paying user has a balance record with 0 values
+      try {
+        // Get user currency
+        const { data: userData } = await supabase
+          .from('users')
+          .select('currency')
+          .eq('id', payment.user_id)
+          .single();
+
+        const userCurrency = userData?.currency || 'USD';
+
+        // Check if balance exists
+        const { data: existingBalance } = await supabase
+          .from('user_balances')
+          .select('user_id')
+          .eq('user_id', payment.user_id)
+          .maybeSingle();
+
+        if (!existingBalance) {
+          // Create balance record with 0 values
+          const { error: balanceInsertError } = await supabase
+            .from('user_balances')
+            .insert({
+              user_id: payment.user_id,
+              available_balance: 0,
+              pending_balance: 0,
+              total_earned: 0,
+              total_withdrawn: 0,
+              currency: userCurrency,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+
+          if (balanceInsertError) {
+            console.error('❌ Failed to create balance for paying user:', balanceInsertError);
+          } else {
+            console.log(`✅ Balance record created for paying user: ${payment.user_id} with 0 values`);
+          }
+        } else {
+          console.log(`✅ Balance record already exists for paying user: ${payment.user_id}`);
+        }
+      } catch (balanceError) {
+        console.error('❌ Error ensuring balance for paying user:', balanceError);
+      }
+
     res.json({
       success: true,
       message: `Payment ${status}! User ${status === 'approved' ? 'activated' : 'not activated'}.`,

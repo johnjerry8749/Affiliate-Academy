@@ -7,7 +7,9 @@ import {
     demoteAdmin, 
     getAllUsers, 
     deleteUser ,
-    getDashboardData
+    getDashboardData,
+    ensureUserBalance,
+    updateUserBalance
 } from '../controller/adminAuth.js';
 import {
     getAllCourses,
@@ -49,6 +51,20 @@ Adminrouter.get('/users', verifyAdminToken, getAllUsers);
  * :id - The unique identifier of the user to delete
  */
 Adminrouter.delete('/users/:id', verifyAdminToken, deleteUser);
+
+/**
+ * POST /api/admin/users/:id/ensure-balance
+ * Ensures a balance record exists for the user
+ * :id - The unique identifier of the user
+ */
+Adminrouter.post('/users/:id/ensure-balance', verifyAdminToken, ensureUserBalance);
+
+/**
+ * PUT /api/admin/users/:id/update-balance
+ * Updates the balance record for the user
+ * :id - The unique identifier of the user
+ */
+Adminrouter.put('/users/:id/update-balance', verifyAdminToken, updateUserBalance);
 
 // =============================================
 // ADMIN ROLE MANAGEMENT ROUTES

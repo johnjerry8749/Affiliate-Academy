@@ -241,7 +241,6 @@ export const verifyPaystack = async (req, res) => {
           const { error: insertError } = await supabase
             .from('user_balances')
             .insert({
-              id: crypto.randomUUID(),
               user_id: referrerId,
               available_balance: finalAmount,
               pending_balance: 0,
@@ -346,6 +345,51 @@ export const verifyPaystack = async (req, res) => {
       } catch (companyWalletError) {
         console.error('Company wallet update failed (100%):', companyWalletError);
       }
+    }
+
+    // Ensure paying user has a balance record with 0 values
+    try {
+      // Get user currency
+      const { data: userData } = await supabase
+        .from('users')
+        .select('currency')
+        .eq('id', newUserId)
+        .single();
+
+      const userCurrency = userData?.currency || 'USD';
+
+      // Check if balance exists
+      const { data: existingBalance } = await supabase
+        .from('user_balances')
+        .select('user_id')
+        .eq('user_id', newUserId)
+        .maybeSingle();
+
+      if (!existingBalance) {
+        // Create balance record with 0 values
+        const { error: balanceInsertError } = await supabase
+          .from('user_balances')
+          .insert({
+            user_id: newUserId,
+            available_balance: 0,
+            pending_balance: 0,
+            total_earned: 0,
+            total_withdrawn: 0,
+            currency: userCurrency,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+        if (balanceInsertError) {
+          console.error('❌ Failed to create balance for paying user:', balanceInsertError);
+        } else {
+          console.log(`✅ Balance record created for paying user: ${newUserId} with 0 values`);
+        }
+      } else {
+        console.log(`✅ Balance record already exists for paying user: ${newUserId}`);
+      }
+    } catch (balanceError) {
+      console.error('❌ Error ensuring balance for paying user:', balanceError);
     }
 
     return res.status(200).json({
