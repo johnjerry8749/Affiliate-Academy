@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import crypto from 'crypto';
 import { supabase } from '../utils/supabaseClient.js';
 import { sendEmailDirect } from '../services/mailservices.js';
+import { convertCurrency } from '../services/currencyService.js';
 
 export const verifyPaystack = async (req, res) => {
   const { reference } = req.params;
@@ -181,10 +182,34 @@ export const verifyPaystack = async (req, res) => {
           console.error('Company wallet update failed:', companyWalletError);
         }
 
-        // 2. UPDATE REFERRER'S USER_BALANCES
+        // 2. UPDATE REFERRER'S USER_BALANCES WITH CURRENCY CONVERSION
+        // Get referrer's currency from their profile
+        const { data: referrerProfile } = await supabase
+          .from('users')
+          .select('currency')
+          .eq('id', referrerId)
+          .single();
+
+        const referrerCurrency = referrerProfile?.currency || 'NGN';
+        let finalAmount = referrerTotal;
+        let conversionInfo = { exchangeRate: 1, converted: false };
+
+        // Convert NGN to referrer's currency if different
+        if (referrerCurrency !== 'NGN') {
+          console.log(`Converting ${referrerTotal} NGN to ${referrerCurrency}...`);
+          const conversion = await convertCurrency(referrerTotal, 'NGN', referrerCurrency);
+          if (conversion.success) {
+            finalAmount = conversion.convertedAmount;
+            conversionInfo = { exchangeRate: conversion.exchangeRate, converted: true };
+            console.log(`Converted: ₦${referrerTotal} NGN = ${finalAmount} ${referrerCurrency} (Rate: ${conversion.exchangeRate})`);
+          } else {
+            console.error('Currency conversion failed, using NGN amount');
+          }
+        }
+
         const { data: balanceData, error: balanceError } = await supabase
           .from('user_balances')
-          .select('available_balance, total_earned')
+          .select('available_balance, total_earned, currency')
           .eq('user_id', referrerId)
           .single();
 
@@ -194,21 +219,22 @@ export const verifyPaystack = async (req, res) => {
 
         if (balanceData) {
           // User balance exists - UPDATE IT
-          const newAvailableBalance = (balanceData.available_balance || 0) + referrerTotal;
-          const newTotalEarned = (balanceData.total_earned || 0) + referrerTotal;
+          const newAvailableBalance = (balanceData.available_balance || 0) + finalAmount;
+          const newTotalEarned = (balanceData.total_earned || 0) + finalAmount;
 
           const { error: updateError } = await supabase
             .from('user_balances')
             .update({
               available_balance: newAvailableBalance,
-              total_earned: newTotalEarned
+              total_earned: newTotalEarned,
+              currency: referrerCurrency
             })
             .eq('user_id', referrerId);
 
           if (updateError) {
             console.error('❌ Error updating referrer balance:', updateError);
           } else {
-            console.log(`✅ Referrer balance updated: +₦${referrerTotal} (Total: ₦${newAvailableBalance})`);
+            console.log(`✅ Referrer balance updated: +${finalAmount} ${referrerCurrency} (Total: ${newAvailableBalance} ${referrerCurrency})`);
           }
         } else {
           // User balance doesn't exist - CREATE IT
@@ -217,16 +243,17 @@ export const verifyPaystack = async (req, res) => {
             .insert({
               id: crypto.randomUUID(),
               user_id: referrerId,
-              available_balance: referrerTotal,
+              available_balance: finalAmount,
               pending_balance: 0,
-              total_earned: referrerTotal,
-              total_withdrawn: 0
+              total_earned: finalAmount,
+              total_withdrawn: 0,
+              currency: referrerCurrency
             });
 
           if (insertError) {
             console.error('❌ Failed to create balance for referrer:', insertError);
           } else {
-            console.log(`✅ Balance created for referrer: ₦${referrerTotal}`);
+            console.log(`✅ Balance created for referrer: ${finalAmount} ${referrerCurrency}`);
           }
         }
 
