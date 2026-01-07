@@ -356,7 +356,7 @@ const Withdrawrequest = () => {
                     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                   }}>
                     <table className="table table-hover mb-0">
-                      <thead style={{ backgroundColor: '#f8f9fa' }}>
+                      <thead style={{ backgroundColor: '#f8f9fa', fontSize: '13px' }}>
                         <tr>
                           <th className="border-0 py-3 ps-4">Transaction ID</th>
                           <th className="border-0 py-3">User</th>
@@ -390,7 +390,7 @@ const Withdrawrequest = () => {
                             <td>
                               <div>
                                 <small>
-                                  {/* <strong>Bank:</strong> {withdrawal.account_details || withdrawal.users?.bank_name || 'N/A'}<br /> */}
+                                  <strong>Bank:</strong> {withdrawal.account_details || withdrawal.users?.bank_name || 'N/A'}<br />
                                   <strong>Account:</strong> {withdrawal.account_details || 'N/A'}<br />
                                 </small>
                               </div>
@@ -486,8 +486,8 @@ const Withdrawrequest = () => {
                             <td>
                               <div>
                                 <small>
-                                  <strong>Bank:</strong> {withdrawal.account_details?.bank_name || withdrawal.users?.bank_name || 'N/A'}<br />
-                                  <strong>Account:</strong> {withdrawal.account_details?.account_number || withdrawal.users?.account_number || 'N/A'}<br />
+                                  <strong>Bank:</strong> {withdrawal.account_details || withdrawal.users?.bank_name || 'N/A'}<br />
+                                  <strong>Account:</strong> {withdrawal.account_details || 'N/A'}<br />
                                 </small>
                               </div>
                             </td>
