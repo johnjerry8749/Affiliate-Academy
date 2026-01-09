@@ -1,6 +1,84 @@
 import { supabase } from '../utils/supabaseClient.js';
 import { sendEmailDirect } from '../services/mailservices.js';
 
+// Fetch all withdrawal requests with user details
+export const getWithdrawalRequests = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build query for withdrawal requests
+    let query = supabase
+      .from('withdrawal_requests')
+      .select('*', { count: 'exact' })
+      .order('request_date', { ascending: false });
+
+    // Filter by status if provided
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    // Search by transaction_id or amount
+    if (search && search.trim()) {
+      const searchNum = parseFloat(search);
+      if (!isNaN(searchNum)) {
+        query = query.or(`transaction_id.ilike.%${search}%,amount.eq.${searchNum}`);
+      } else {
+        query = query.ilike('transaction_id', `%${search}%`);
+      }
+    }
+
+    // Pagination
+    query = query.range(offset, offset + parseInt(limit) - 1);
+
+    const { data: withdrawalData, error: withdrawalError, count } = await query;
+
+    if (withdrawalError) {
+      console.error('Error fetching withdrawals:', withdrawalError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch withdrawal requests: ' + withdrawalError.message
+      });
+    }
+
+    // Fetch user data for each withdrawal
+    let withdrawalsWithUsers = [];
+    if (withdrawalData && withdrawalData.length > 0) {
+      const userIds = [...new Set(withdrawalData.map(w => w.user_id))];
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('*')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+      }
+
+      // Map users to withdrawals
+      withdrawalsWithUsers = withdrawalData.map(withdrawal => ({
+        ...withdrawal,
+        users: usersData?.find(user => user.id === withdrawal.user_id) || null
+      }));
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: withdrawalsWithUsers,
+      total: count || 0,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+  } catch (error) {
+    console.error('Error in getWithdrawalRequests:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + error.message
+    });
+  }
+};
+
 export const updateWithdrawalStatus = async (req, res) => {
   try {
     const { withdrawalId, status } = req.body;

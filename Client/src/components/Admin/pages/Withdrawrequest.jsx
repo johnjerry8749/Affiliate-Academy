@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminSidebar from '../adminLayout/AdminSidebar';
 import Smallfooter from '../../Users/UserLayout/smallfooter';
-import { supabase } from '../../../../supabase';
 
 const Withdrawrequest = () => {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -62,54 +61,36 @@ const Withdrawrequest = () => {
   const fetchWithdrawals = async () => {
     setLoading(true);
     try {
-      // First, fetch withdrawal requests
-      let query = supabase
-        .from('withdrawal_requests')
-        .select('*, account_details', { count: 'exact' })
-        .order('request_date', { ascending: false });
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      
+      // Build query params
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: withdrawalsPerPage,
+        status: filterStatus,
+        search: searchQuery
+      });
 
-      if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus);
+      const response = await fetch(`${BACKEND_URL}/api/withdrawal/requests?${params}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+
+      console.log('Withdrawal API response:', result);
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch withdrawal requests');
       }
 
-      if (searchQuery.trim()) {
-        query = query.or(`transaction_id.ilike.%${searchQuery}%,amount.eq.${parseFloat(searchQuery) || 0}`);
-      }
-
-      const from = (currentPage - 1) * withdrawalsPerPage;
-      const to = from + withdrawalsPerPage - 1;
-      query = query.range(from, to);
-
-      const { data: withdrawalData, error: withdrawalError, count } = await query;
-
-      if (withdrawalError) throw withdrawalError;
-
-      // Fetch user data for each withdrawal
-      if (withdrawalData && withdrawalData.length > 0) {
-        const userIds = [...new Set(withdrawalData.map(w => w.user_id))];
-        
-        const { data: usersData, error: usersError } = await supabase
-          .from('users')
-          .select('id, full_name, email, bank_name, account_number, payment_method, currency')
-          .in('id', userIds);
-
-        if (usersError) throw usersError;
-
-        // Map users to withdrawals
-        const withdrawalsWithUsers = withdrawalData.map(withdrawal => ({
-          ...withdrawal,
-          users: usersData.find(user => user.id === withdrawal.user_id) || null
-        }));
-
-        setWithdrawals(withdrawalsWithUsers);
-      } else {
-        setWithdrawals([]);
-      }
-
-      setTotalWithdrawals(count || 0);
+      setWithdrawals(result.data || []);
+      setTotalWithdrawals(result.total || 0);
     } catch (error) {
       console.error('Error fetching withdrawals:', error);
-      showLiveAlert('Failed to fetch withdrawal requests', 'danger');
+      showLiveAlert('Failed to fetch withdrawal requests: ' + error.message, 'danger');
     } finally {
       setLoading(false);
     }
@@ -358,10 +339,10 @@ const Withdrawrequest = () => {
                     <table className="table table-hover mb-0">
                       <thead style={{ backgroundColor: '#f8f9fa', fontSize: '13px' }}>
                         <tr>
-                          <th className="border-0 py-3 ps-4">Transaction ID</th>
-                          <th className="border-0 py-3">User</th>
-                          <th className="border-0 py-3">Amount</th>
-                          <th className="border-0 py-3">Bank Details</th>
+                          <th className="border-0 py-3 ps-4">Request ID</th>
+                          <th className="border-0 py-3">User Details</th>
+                          <th className="border-0 py-3">Withdrawal Amount</th>
+                          <th className="border-0 py-3">Payment Details</th>
                           <th className="border-0 py-3">Status</th>
                           <th className="border-0 py-3">Request Date</th>
                           <th className="border-0 py-3">Actions</th>
@@ -372,26 +353,51 @@ const Withdrawrequest = () => {
                           <tr key={withdrawal.id}>
                             <td className="ps-4">
                               <small className="font-monospace text-muted">
-                                {withdrawal.transaction_id || withdrawal.id.slice(0, 8)}
+                                #{withdrawal.transaction_id || withdrawal.id.slice(0, 8)}
                               </small>
                             </td>
                             <td>
                               <div>
-                                <strong>{withdrawal.users?.full_name || 'N/A'}</strong>
+                                <strong className="text-dark">
+                                  <i className="bi bi-person-circle me-1 text-primary"></i>
+                                  {withdrawal.users?.full_name || 'N/A'}
+                                </strong>
                                 <br />
-                                <small className="text-muted">{withdrawal.users?.email || 'N/A'}</small>
+                                <small className="text-muted">
+                                  <i className="bi bi-envelope me-1"></i>
+                                  {withdrawal.users?.email || 'N/A'}
+                                </small>
+                                {withdrawal.users?.phone && (
+                                  <>
+                                    <br />
+                                    <small className="text-muted">
+                                      <i className="bi bi-telephone me-1"></i>
+                                      {withdrawal.users?.phone}
+                                    </small>
+                                  </>
+                                )}
                               </div>
                             </td>
                             <td>
-                              <strong className="text-primary">
-                                {formatCurrency(withdrawal.amount, withdrawal.currency || withdrawal.users?.currency)}
-                              </strong>
+                              <div>
+                                <strong className="text-success fs-6">
+                                  {formatCurrency(withdrawal.amount, withdrawal.currency || withdrawal.users?.currency)}
+                                </strong>
+                                <br />
+                                <small className="text-muted">
+                                  Currency: {withdrawal.currency || withdrawal.users?.currency || 'USD'}
+                                </small>
+                              </div>
                             </td>
                             <td>
                               <div>
                                 <small>
-                                  <strong>Bank:</strong> {withdrawal.users?.bank_name || 'N/A'}<br />
-                                  <strong>Account:</strong> {withdrawal.account_details || withdrawal.users?.account_number || 'N/A'}<br />
+                                  <strong><i className="bi bi-bank me-1"></i>Bank:</strong> {withdrawal.bank_name || withdrawal.users?.bank_name || 'N/A'}<br />
+                                  <strong><i className="bi bi-credit-card me-1"></i>Account:</strong> {withdrawal.account_number || withdrawal.account_details || withdrawal.users?.account_number || 'N/A'}<br />
+                                  {(withdrawal.account_name || withdrawal.users?.full_name) && (
+                                    <><strong><i className="bi bi-person me-1"></i>Name:</strong> {withdrawal.account_name || withdrawal.users?.full_name}<br /></>
+                                  )}
+                                  
                                 </small>
                               </div>
                             </td>
@@ -431,100 +437,122 @@ const Withdrawrequest = () => {
                 </div>
               </div>
 
-              {/* Mobile Table View */}
-              <div className="card border-0 shadow-sm d-lg-none" style={{ 
-                overflow: 'visible',
-                backgroundColor: 'transparent',
-                boxShadow: 'none'
-              }}>
-                <div className="card-body p-0" style={{
-                  backgroundColor: 'transparent'
-                }}>
-                  <div style={{ 
-                    position: 'relative',
-                    overflowX: 'auto',
-                    overflowY: 'visible',
-                    WebkitOverflowScrolling: 'touch',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#cbd5e0 #f7fafc'
-                  }}>
-                    <table className="table table-hover mb-0" style={{ minWidth: '1000px' }}>
-                      <thead style={{ backgroundColor: '#f8f9fa' }}>
-                        <tr>
-                          {/* <th className="border-0 py-3 ps-4" style={{ minWidth: '150px' }}>Transaction ID</th> */}
-                          <th className="border-0 py-3" style={{ minWidth: '220px' }}>User</th>
-                          <th className="border-0 py-3" style={{ minWidth: '120px' }}>Amount</th>
-                          <th className="border-0 py-3" style={{ minWidth: '200px' }}>Bank Details</th>
-                          <th className="border-0 py-3" style={{ minWidth: '110px' }}>Status</th>
-                          <th className="border-0 py-3" style={{ minWidth: '150px' }}>Request Date</th>
-                          <th className="border-0 py-3" style={{ minWidth: '260px' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {withdrawals.map((withdrawal) => (
-                          <tr key={withdrawal.id}>
-                            {/* <td className="ps-4">
-                              <small className="font-monospace text-muted">
-                                {withdrawal.transaction_id || withdrawal.id.slice(0, 8)}
+              {/* Mobile Card View */}
+              <div className="d-lg-none">
+                {withdrawals.map((withdrawal) => (
+                  <div key={withdrawal.id} className="card mb-3 shadow-sm withdrawal-card">
+                    <div className="card-body">
+                      {/* Request ID & Status Header */}
+                      <div className="d-flex justify-content-between align-items-start mb-3">
+                        <small className="font-monospace text-muted">
+                          <i className="bi bi-hash me-1"></i>
+                          {withdrawal.transaction_id || withdrawal.id?.slice(0, 8)}
+                        </small>
+                        <span className={`badge status-badge ${getStatusBadge(withdrawal.status)}`}>
+                          {withdrawal.status?.toUpperCase()}
+                        </span>
+                      </div>
+
+                      {/* User Details Section */}
+                      <div className="mb-3 p-2 bg-light rounded">
+                        <h6 className="mb-2 text-dark">
+                          <i className="bi bi-person-circle me-2"></i>
+                          User Details
+                        </h6>
+                        <div className="ps-3">
+                          <div className="mb-1">
+                            <strong className="text-dark">{withdrawal.users?.full_name || 'N/A'}</strong>
+                          </div>
+                          <div className="mb-1">
+                            <small className="text-dark">
+                              <i className="bi bi-envelope me-1"></i>
+                              {withdrawal.users?.email || 'N/A'}
+                            </small>
+                          </div>
+                          {withdrawal.users?.phone && (
+                            <div>
+                              <small className="text-dark">
+                                <i className="bi bi-telephone me-1"></i>
+                                {withdrawal.users?.phone}
                               </small>
-                            </td> */}
-                            <td>
-                              <div>
-                                <strong>{withdrawal.users?.full_name || 'N/A'}</strong>
-                                <br />
-                                <small className="text-muted">{withdrawal.users?.email || 'N/A'}</small>
-                              </div>
-                            </td>
-                            <td>
-                              <strong className="text-primary">
-                                {formatCurrency(withdrawal.amount, withdrawal.currency || withdrawal.users?.currency)}
-                              </strong>
-                            </td>
-                            <td>
-                              <div>
-                                <small>
-                                  <strong>Bank:</strong> {withdrawal.users?.bank_name || 'N/A'}<br />
-                                  <strong>Account:</strong> {withdrawal.account_details || withdrawal.users?.account_number || 'N/A'}<br />
-                                </small>
-                              </div>
-                            </td>
-                            <td>
-                              <span className={`badge status-badge ${getStatusBadge(withdrawal.status)}`}>
-                                {withdrawal.status?.toUpperCase()}
-                              </span>
-                            </td>
-                            <td>
-                              <small>{formatDate(withdrawal.request_date)}</small>
-                            </td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <button
-                                  className="btn btn-sm btn-success"
-                                  onClick={() => updateWithdrawalStatus(withdrawal.id, 'approved')}
-                                  disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
-                                >
-                                  <i className="bi bi-check-circle me-1"></i>
-                                  Mark as Paid
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => updateWithdrawalStatus(withdrawal.id, 'rejected')}
-                                  disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
-                                >
-                                  <i className="bi bi-x-circle me-1"></i>
-                                  Reject
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Withdrawal Amount Section */}
+                      <div className="mb-3 p-2 bg-success bg-opacity-10 rounded">
+                        <h6 className="mb-2 text-dark">
+                          <i className="bi bi-cash-stack me-2"></i>
+                          Withdrawal Amount
+                        </h6>
+                        <div className="ps-3">
+                          <div className="fs-5 fw-bold text-dark">
+                            {formatCurrency(withdrawal.amount, withdrawal.currency || withdrawal.users?.currency)}
+                          </div>
+                          <small className="text-dark">
+                            Currency: {withdrawal.currency || withdrawal.users?.currency || 'USD'}
+                          </small>
+                        </div>
+                      </div>
+
+                      {/* Payment Details Section */}
+                      <div className="mb-3 p-2 bg-info bg-opacity-10 rounded">
+                        <h6 className="mb-2 text-dark">
+                          <i className="bi bi-bank me-2"></i>
+                          Payment Details
+                        </h6>
+                        <div className="ps-3">
+                          <div className="mb-1">
+                            <small className="text-dark">
+                              <strong>Bank:</strong> {withdrawal.bank_name || withdrawal.users?.bank_name || 'N/A'}
+                            </small>
+                          </div>
+                          <div className="mb-1">
+                            <small className="text-dark">
+                              <strong>Account:</strong> {withdrawal.account_number || withdrawal.account_details || withdrawal.users?.account_number || 'N/A'}
+                            </small>
+                          </div>
+                          {(withdrawal.account_name || withdrawal.users?.full_name) && (
+                            <div className="mb-1">
+                              <small className="text-dark">
+                                <strong>Account Name:</strong> {withdrawal.account_name || withdrawal.users?.full_name}
+                              </small>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Request Date */}
+                      <div className="mb-3">
+                        <small className="text-dark">
+                          <i className="bi bi-calendar me-1"></i>
+                          Requested: {formatDate(withdrawal.request_date)}
+                        </small>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-success flex-grow-1"
+                          onClick={() => updateWithdrawalStatus(withdrawal.id, 'approved')}
+                          disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
+                        >
+                          <i className="bi bi-check-circle me-1"></i>
+                          Mark as Paid
+                        </button>
+                        <button
+                          className="btn btn-danger flex-grow-1"
+                          onClick={() => updateWithdrawalStatus(withdrawal.id, 'rejected')}
+                          disabled={withdrawal.status === 'approved' || withdrawal.status === 'rejected'}
+                        >
+                          <i className="bi bi-x-circle me-1"></i>
+                          Reject
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
 
               {totalPages > 1 && (
