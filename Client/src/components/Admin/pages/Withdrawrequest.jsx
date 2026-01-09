@@ -390,8 +390,8 @@ const Withdrawrequest = () => {
                             <td>
                               <div>
                                 <small>
-                                  <strong>Bank:</strong> {withdrawal.account_details || withdrawal.users?.bank_name || 'N/A'}<br />
-                                  <strong>Account:</strong> {withdrawal.account_details || 'N/A'}<br />
+                                  <strong>Bank:</strong> {withdrawal.users?.bank_name || 'N/A'}<br />
+                                  <strong>Account:</strong> {withdrawal.account_details || withdrawal.users?.account_number || 'N/A'}<br />
                                 </small>
                               </div>
                             </td>
@@ -454,7 +454,7 @@ const Withdrawrequest = () => {
                     <table className="table table-hover mb-0" style={{ minWidth: '1000px' }}>
                       <thead style={{ backgroundColor: '#f8f9fa' }}>
                         <tr>
-                          <th className="border-0 py-3 ps-4" style={{ minWidth: '150px' }}>Transaction ID</th>
+                          {/* <th className="border-0 py-3 ps-4" style={{ minWidth: '150px' }}>Transaction ID</th> */}
                           <th className="border-0 py-3" style={{ minWidth: '220px' }}>User</th>
                           <th className="border-0 py-3" style={{ minWidth: '120px' }}>Amount</th>
                           <th className="border-0 py-3" style={{ minWidth: '200px' }}>Bank Details</th>
@@ -466,11 +466,11 @@ const Withdrawrequest = () => {
                       <tbody>
                         {withdrawals.map((withdrawal) => (
                           <tr key={withdrawal.id}>
-                            <td className="ps-4">
+                            {/* <td className="ps-4">
                               <small className="font-monospace text-muted">
                                 {withdrawal.transaction_id || withdrawal.id.slice(0, 8)}
                               </small>
-                            </td>
+                            </td> */}
                             <td>
                               <div>
                                 <strong>{withdrawal.users?.full_name || 'N/A'}</strong>
@@ -486,8 +486,8 @@ const Withdrawrequest = () => {
                             <td>
                               <div>
                                 <small>
-                                  <strong>Bank:</strong> {withdrawal.account_details || withdrawal.users?.bank_name || 'N/A'}<br />
-                                  <strong>Account:</strong> {withdrawal.account_details || 'N/A'}<br />
+                                  <strong>Bank:</strong> {withdrawal.users?.bank_name || 'N/A'}<br />
+                                  <strong>Account:</strong> {withdrawal.account_details || withdrawal.users?.account_number || 'N/A'}<br />
                                 </small>
                               </div>
                             </td>
