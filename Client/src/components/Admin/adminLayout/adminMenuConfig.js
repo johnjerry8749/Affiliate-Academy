@@ -42,6 +42,12 @@ export const ADMIN_MENU_ITEMS = [
       description: 'Manage Crypto Payment Proofs',
     },
     {
+      title: 'Referral Management',
+      icon: 'fas fa-user-friends',
+      path: '/admin/referrals',
+      description: 'Manage Referrals',
+    },
+    {
       title: 'Site Settings',
       icon: 'fas fa-cogs',
       path: '/admin/settings',

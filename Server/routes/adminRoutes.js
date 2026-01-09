@@ -9,7 +9,8 @@ import {
     deleteUser ,
     getDashboardData,
     ensureUserBalance,
-    updateUserBalance
+    updateUserBalance,
+    getUsersWithReferrals
 } from '../controller/adminAuth.js';
 import {
     getAllCourses,
@@ -65,6 +66,13 @@ Adminrouter.post('/users/:id/ensure-balance', verifyAdminToken, ensureUserBalanc
  * :id - The unique identifier of the user
  */
 Adminrouter.put('/users/:id/update-balance', verifyAdminToken, updateUserBalance);
+
+/**
+ * GET /api/admin/users-referrals
+ * Fetches all users with their referrals and commission history
+ * Used for referral management and tracking
+ */
+Adminrouter.get('/users-referrals', verifyAdminToken, getUsersWithReferrals);
 
 // =============================================
 // ADMIN ROLE MANAGEMENT ROUTES

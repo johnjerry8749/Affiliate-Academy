@@ -30,7 +30,7 @@ import Invite from './components/Users/Invite.jsx';
 
 import AdminLogin from './components/Admin/AdminLogin.jsx';
 import AdminDashboard from './components/Admin/pages/AdminDashboard.jsx';
-import AdminDashboardPage from './components/Admin/pages/Dashboard.jsx';
+import AdminReferralManagement from './components/Admin/pages/ReferalTransactions.jsx';
 import ManageUsers from './components/Admin/pages/Manageusers.jsx';
 import CourseManagement from './components/Admin/pages/CourseManagement.jsx';
 import WithdrawRequest from './components/Admin/pages/Withdrawrequest.jsx';
@@ -154,6 +154,14 @@ const Layout = () => {
             element={
               <AdminProtected>
                 <AdminCrypto />
+              </AdminProtected>
+            }
+          />
+          <Route
+            path="/admin/referrals"
+            element={
+              <AdminProtected>
+                < AdminReferralManagement />
               </AdminProtected>
             }
           />

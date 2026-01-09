@@ -360,3 +360,90 @@ export const updateUserBalance = async (req, res) => {
     res.status(500).json({ error: 'Failed to update balance' });
   }
 };
+
+// Get all users with their referrals and commission history
+export const getUsersWithReferrals = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '' } = req.query;
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const start = (pageNum - 1) * limitNum;
+    const end = start + limitNum - 1;
+
+    // Build query for users
+    let query = supabase
+      .from('users')
+      .select('id, full_name, email, referral_code, referrer_id, currency, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(start, end);
+
+    // Add search filter
+    if (search.trim()) {
+      query = query.or(
+        `full_name.ilike.%${search}%,email.ilike.%${search}%,referral_code.ilike.%${search}%`
+      );
+    }
+
+    const { data: users, error: usersError, count } = await query;
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      return res.status(400).json({ message: usersError.message });
+    }
+
+    // For each user, get their referrals and commission data
+    const usersWithReferrals = await Promise.all(
+      users.map(async (user) => {
+        // Get users referred by this user (users who used this user's referral code)
+        const { data: referrals, error: referralsError } = await supabase
+          .from('users')
+          .select('id, full_name, email, created_at')
+          .eq('referrer_id', user.id);
+
+        if (referralsError) {
+          console.error('Error fetching referrals for user:', user.id, referralsError);
+        }
+
+        // Get commission transactions for this user
+        const { data: commissions, error: commissionsError } = await supabase
+          .from('referral_commissions')
+          .select('*')
+          .eq('referrer_id', user.id);
+
+        // Calculate total commission
+        let totalCommission = 0;
+        if (commissions && commissions.length > 0) {
+          totalCommission = commissions.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+        }
+
+        // Map referrals with their commission amounts
+        const referralsWithCommission = (referrals || []).map(ref => {
+          const commission = commissions?.find(c => c.referred_user_id === ref.id);
+          return {
+            ...ref,
+            commission_amount: commission?.amount || 0,
+            commission_paid: commission?.status === 'paid' || commission?.is_paid || false
+          };
+        });
+
+        return {
+          ...user,
+          referral_count: referrals?.length || 0,
+          total_commission: totalCommission,
+          referrals: referralsWithCommission
+        };
+      })
+    );
+
+    res.json({
+      data: usersWithReferrals,
+      total: count,
+      currentPage: pageNum,
+      totalPages: Math.ceil(count / limitNum)
+    });
+  } catch (error) {
+    console.error('getUsersWithReferrals error:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
